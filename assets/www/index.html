@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Shift</title>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="initial-scale=1, width=device-width, height=device-height" />
+	
+	<link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.3.0.min.css" />
+	<link rel="stylesheet" type="text/css" href="css/index.css" />
+	
+	<script src="cordova-2.7.0.js"></script>
+	<script src="js/barcodescanner.js"></script>
+	<script src="js/ocr.js"></script>
+	<script src="js/jquery-1.8.2.min.js"></script>
+	<script src="js/jquery.mobile-1.3.0.min.js"></script>
+	<script src="js/underscore.js"></script>
+	<script src="js/backbone.js"></script>
+	<script src="js/HomeView.js"></script>
+	<script src="js/OcrView.js"></script>
+	<script src="js/index.js"></script>
+</head>
+
+<body>
+	<!-- Home page -->
+	<div data-role="page" id="page">
+
+		<!-- Bookmarks panel -->
+		<div data-role="panel" id="favorite" data-theme="c" data-display="push">
+			<ul id="bookmarks" data-role="listview" data-split-icon="gear" data-split-theme="b"
+				data-theme="c" data-filter="true" data-filter-placeholder="Search Bookmarks..."
+				data-inset="true">
+				<li data-role="list-divider" data-theme="e">My Bookmarks:</li>
+			</ul>
+		</div>
+
+		<!-- Applications panel -->
+		<div data-role="panel" id="url" data-position="right" data-theme="c" data-display="push">
+			<!-- panel content goes here -->
+			<ul data-role="listview" data-inset="true" data-divider-theme="e" data-filter="true">
+				<li data-role="list-divider">Public Applications</li>
+				<li><a href="#url" data-rel="close" onclick="switchApp('PubMed');">PubMed</a></li>
+				<li><a href="#url" data-rel="close" onclick="switchApp('foo');">foo</a></li>
+				<li data-role="list-divider">My Applications</li>
+				<li id="bar"><a id="bar" href="#url" data-rel="close">bar</a><a href="#urlHandler"
+					data-rel="popup" id="bar" onclick="urlHandlerHelper(id);" data-position-to="window"
+					data-transition="pop"></a></li>
+				<li id="baz"><a id="baz" href="#url" data-rel="close">baz</a><a href="#urlHandler"
+					data-rel="popup" id="baz" onclick="urlHandlerHelper(id);" data-position-to="window"
+					data-transition="pop"></a></li>
+			</ul>
+		</div>
+
+		<!-- Login form popup -->
+		<div data-role="popup" id="myAccount" data-theme="b">
+			<div data-role="popup" id="popupLogin" data-theme="b" class="ui-corner-all">
+				<form>
+					<div style="padding: 10px 20px;">
+						<label for="un" class="ui-hidden-accessible">Username:</label>
+						<input type="text" name="user" id="un" value="" placeholder="username"
+						data-theme="a">
+						<label for="pw" class="ui-hidden-accessible">Password:</label>
+						<input type="password" name="pass" id="pw" value="" placeholder="password"
+						data-theme="a">
+						<button type="submit" data-theme="b">Sign in</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Bookmark options popup -->
+		<div data-role="popup" id="bookmarkHandler" data-theme="b">
+			<ul data-role="listview" data-inset="true" style="min-width: 210px;" data-theme="b"
+				data-overlay-theme="a">
+				<li data-role="divider" data-theme="e">Choose an action</li>
+				<li><a href="#page" data-rel="back">Share</a></li>
+				<li><a href="#page" data-rel="back" onclick="deleteBookmark();">Delete</a></li>
+			</ul>
+		</div>
+
+		<!-- My Applications options popup -->
+		<div data-role="popup" id="urlHandler" data-theme="b">
+			<ul data-role="listview" data-inset="true" style="min-width: 210px;" data-theme="b"
+				data-overlay-theme="a">
+				<li data-role="divider" data-theme="e">Choose an action</li>
+				<li><a href="#page" data-rel="back">Share</a></li>
+				<li><a href="#page" data-rel="back" onclick="deleteUrl();">Delete</a></li>
+			</ul>
+		</div>
+
+		<!-- Header -->
+		<div data-role="header" id="headerBar" data-theme="b" data-position="fixed">
+			<a id="chooseFavorite" href="#favorite">Bookmarks</a>
+			<h1>Shift</h1>
+			<a id="chooseUrl" href="#url">Applications</a>
+		</div>
+
+		<!-- Content -->
+		<div id="content" data-role="content">
+			<p id="appName">Application Name:</p>
+			<p id="ScannedCode"></p>
+			<p id="pt">Patient Name:</p>
+			<p id="mrn">MRN:</p>
+			<p id="acc">Exam:</p>
+			<div id="center-button">
+				<a href="#page" id="launch" data-role="button" data-theme="b" data-inline="true"
+					onclick="openApp(id);">Launch Application</a> <a href="#page" id="bookmarks" data-role="button"
+					data-theme="b" data-inline="true" onclick="addBookmarks();">Add To Bookmarks</a>
+			</div>
+		</div>
+
+		<!-- Footer -->
+		<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+			<div data-role="navbar" class="nav-glyphish-example">
+				<ul>
+					<li><a href="#page" id="scanCode" data-theme="b" data-icon="custom"
+					onclick="scanCode();"></a></li>
+					<li><a href="#home" id="ocr-btn" data-theme="b" data-icon="custom"></a></li>
+					<li><a href="#page" id="voice-btn" data-theme="b" data-icon="custom"></a></li>
+					<!-- TODO: relocate?
+					<li><a href="#popupLogin" id="myAccount" data-theme="b" data-icon="custom"
+						data-rel="popup" data-position-to="window" data-transition="pop">My Account</a></li>
+					 -->
+				</ul>
+			</div>
+		</div>
+	</div>
+	
+
+	<!-- Home page -->
+	<div data-role="page" id="home">
+		<div data-role="content">
+			<button id="camera-button">Camera</button>
+			<button id="photo-library-button">Photo Library</button>
+		</div>
+	</div>
+
+
+	<!-- OCR page -->
+	<div data-role="page" id="ocr">
+		<div data-role="content" id="ocr-content">
+		
+			<!-- Text input & directions -->
+			<div id="ocr-text-wrap"><div>
+				<table style="width:100%">
+					<tr>
+						<td class="ocr-text-btn">
+							<button id="ocr-text-delete" data-inline="true" data-icon="delete"
+									data-iconpos="notext" data-theme="b"></button></td>
+						<td id="ocr-text-cell">
+							<input type="text" id="ocr-text"/></td>
+				   		<td class="ocr-text-btn">
+				   			<button id="ocr-text-accept" data-inline="true" data-icon="check" 
+				   					data-iconpos="notext" data-theme="b"></button></td>
+					</tr>
+				</table>
+				<p id="ocr-draw-directions">Drag your finger to select text.</p>
+			</div></div>
+			
+			<!-- Canvas -->
+			<div id="ocr-draw-wrap"><div>
+				<div id="ocr-canvas-container">
+					<canvas id="draw-canvas"></canvas>
+					<canvas id="photo-canvas"></canvas>
+				</div>
+			</div></div>
+		</div>
+	</div>
+</body>
+</html>

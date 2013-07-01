@@ -1,0 +1,91 @@
+
+body {
+    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
+    font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+    font-size:12px;
+    height:100%;
+    width:100%;
+    margin:0px;
+    padding:0px;
+}
+
+/* Page formatted according to stackoverflow.com/questions/6158975/css-100-height-layout */
+
+#ocr {
+	height: 100%;
+}
+
+#ocr-content {
+    display: table; 
+    width: 100%;
+    height: 100%; 
+    padding: 0;
+}
+
+#ocr-content > div {
+    display: table-row;   
+    width: 100%;
+}
+
+#ocr-content > div > div {
+    display: table-cell;   
+    width: 100%;
+}
+
+#ocr-draw-wrap > div {
+    height: 100%;
+}
+
+#ocr-text-cell {
+	padding-left: 1em;
+}
+
+.ocr-text-btn {
+	width: 2em;
+}
+
+#ocr-draw-directions {
+	background-color: #5A5A5A;
+	color: white;
+	font-weight: bold;
+	font-size: 110%;
+	text-shadow: black 0px 1px 1px;
+	text-align: center;
+	margin: 0;
+	padding-top: 1px;
+	padding-bottom: 2px;
+}
+
+#ocr-draw-wrap {
+	background-color: black;
+	height: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+
+#ocr-canvas-container {
+	position: relative;
+	height: 100%;
+	width: 300px;
+	margin-left: auto;
+	margin-right: auto;
+	/* Workaround for: code.google.com/p/android/issues/detail?id=35474 */
+	z-index: 50;
+}
+
+/* These canvases are layered on top of each other */
+#draw-canvas, #photo-canvas {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+/* Put draw-canvas above photo-canvas */
+#draw-canvas  { z-index: 1; }
+#photo-canvas { z-index: 0; }
+
+#ocr-popup {
+	max-width: 400px;
+}
