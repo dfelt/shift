@@ -1,14 +1,13 @@
 
-var HomeView = Backbone.View.extend({
+var OcrOptionsView = Backbone.View.extend({
     
     events: {
         'vclick #camera-button':        'getCameraPicture',
         'vclick #photo-library-button': 'getLibraryPicture'
     },
     
-    initialize: function(options) {
-        this.channel = options.channel;
-        this.setElement($('#home'));
+    initialize: function() {
+        this.setElement($('#ocr-options'));
     },
 
     getCameraPicture: function() {
@@ -20,9 +19,9 @@ var HomeView = Backbone.View.extend({
     },
     
     getPicture: function(pictureSource) {
-        var channel = this.channel;
+        var channel = this.options.channel;
         var setPhoto = function(photoUri) {
-            channel.trigger('setPhoto', photoUri);
+            channel.trigger('ocr:setPhoto', photoUri);
             window.location.hash = 'ocr';
         };
         var alertError = function(message) {

@@ -32,8 +32,15 @@ var OcrView = Backbone.View.extend({
     
     lastDrawTime: 0,
     
+    ocrOptions: {},
+    
     initialize: function(options) {
-        options.channel.on('setPhoto', this.setPhoto, this);
+        options.channel.on('ocr:setPhoto', function(photoUri) {
+            this.photo.src = photoUri;
+        }, this);
+        options.channel.on('ocr:setWhiteList', function(charset) {
+            this.ocrOptions.whiteList = charset;
+        }, this);
         
         this.setElement($('#ocr'));
         
@@ -63,6 +70,12 @@ var OcrView = Backbone.View.extend({
             if (this.complete) { $(this).load(); }
         });
 
+        this.words = [];
+        this.selectedWords = [];
+        this.haveWordText = false;
+        this.currentTouchPaths = {};
+        this.finishedTouchPaths = [];
+        this.ocrTextbox.val('');
         this.ocr.getWordBoxes(this.photo.src, this.setWordBoxes, this.alertError);
         return this;
     },
@@ -71,18 +84,6 @@ var OcrView = Backbone.View.extend({
         $(window).off('resize', this.repaint);
         this.photoCtx.clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
         this.drawCtx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
-    },
-    
-    setPhoto: function(photoUri) {
-        this.photo.src = photoUri;
-        this.words = [];
-        this.selectedWords = [];
-        this.haveWordText = false;
-        this.currentTouchPaths = {};
-        this.finishedTouchPaths = [];
-        this.ocrTextbox.val('');
-        //$(this.photoCanvas).hide();
-        //$(this.drawCanvas).hide();
     },
     
     repaint: function() {
