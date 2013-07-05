@@ -118,8 +118,16 @@ public class Ocr extends CordovaPlugin {
 	}
 
 	/** Apply configuration options */
-	private void setOptions(JSONObject options) throws JSONException {
+	private void setOptions(JSONObject options) throws JSONException, IOException {
 		if (options == null) { return; }
+		
+		String lang = options.optString("lang");
+		if (lang != null) {
+			// This resets all parameters previously set
+			tess.init(getTessPath(), lang);
+			image = null;
+			imageUri = null;
+		}
 		
 		int pageSegMode = options.optInt("pageSegMode", -1);
 		if (pageSegMode != -1) {
