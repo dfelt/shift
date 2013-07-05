@@ -19,18 +19,81 @@
 
 package edu.cornell.shift;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebView;
+
 import org.apache.cordova.*;
+import org.json.JSONObject;
 
-public class Shift extends DroidGap
-{
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        // Set by <content src="index.html" /> in config.xml
-        super.loadUrl(Config.getStartUrl());
-        //super.loadUrl("file:///android_asset/www/index.html")
-    }
+public class Shift extends DroidGap {
+	
+	public static final String ACTION_GENERIC_OCR = "edu.cornell.shift.GENERIC_OCR";
+	public static final String ACTION_SCALE_OCR = "edu.cornell.shift.SCALE_OCR";
+	
+	private boolean isService;
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		// Initialize this.appView
+		this.init();
+
+        this.appView.clearCache(true);
+        this.appView.clearHistory();
+        
+		Log.d("Shift", "Got intent: " + getIntent());
+		String act = getIntent().getAction();
+        if (act.equals(ACTION_GENERIC_OCR)) {
+        	runOcr("generic");
+        } else if (act.equals(ACTION_SCALE_OCR)) {
+        	runOcr("scale");
+        } else {
+    		// Set by <content src="index.html" /> in config.xml
+    		//loadUrl(Config.getStartUrl());
+    		loadUrl(Config.getStartUrl());
+        }
+	}
+	
+	private void runOcr(String ocrType) {
+		appView.setWebViewClient(new CordovaWebViewClient(this, appView) {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d("Shift", "shouldOverrideUrlLoading " + url);
+                if(url.startsWith("app://ocr")) {
+                	Uri uri = Uri.parse(url);
+                	String success = uri.getQueryParameter("success");
+                	String message = uri.getQueryParameter("message");
+                	if ("true".equals(success)) {
+                    	Log.d("Shift", "OCR success! " + message);
+                    	
+                    	Intent result = new Intent();
+                    	result.putExtra("score", 5.0);
+                    	setResult(Activity.RESULT_OK, result);
+                    	finish();
+                	} else {
+                    	Log.d("Shift", "OCR error! " + message);
+
+                    	Intent result = new Intent();
+                    	result.putExtra("score", 0.0);
+                    	setResult(Activity.RESULT_CANCELED, result);
+                    	finish();
+                	}
+                	return true;
+                } else {
+                	return super.shouldOverrideUrlLoading(view, url);
+                }
+            }
+		});
+		loadUrl(Config.getStartUrl() + "#ocr-options?service=true&ocrtype=" + ocrType);
+	}
 }
-
