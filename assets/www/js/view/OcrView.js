@@ -1,5 +1,5 @@
 
-var OcrView = Backbone.View.extend({
+window.OcrView = Backbone.View.extend({
     
     events: {
         'pageshow'                    : 'render',
@@ -7,9 +7,8 @@ var OcrView = Backbone.View.extend({
         'touchstart  #draw-canvas'    : 'startDraw',
         'touchmove   #draw-canvas'    : 'moveDraw',
         'touchend    #draw-canvas'    : 'endDraw',
-        'tap         #ocr-draw-wrap'  : 'preventDefault',
-        'onmousedown #ocr-draw-wrap'  : 'preventDefault',
-        'tap         #ocr-text-delete': 'clearText'
+        'vclick      #ocr-text-delete': 'clearText',
+        'vclick      #ocr-text-accept': 'submit'
     },
     
     ocr: cordova.require('cordova/plugin/ocr'),
@@ -34,14 +33,9 @@ var OcrView = Backbone.View.extend({
     
     ocrOptions: {},
     
+    isService: false,
+    
     initialize: function(options) {
-        options.channel.on('ocr:setPhoto', function(photoUri) {
-            this.photo.src = photoUri;
-        }, this);
-        options.channel.on('ocr:setWhiteList', function(charset) {
-            this.ocrOptions.whiteList = charset;
-        }, this);
-        
         this.setElement($('#ocr'));
         
         this.photoCanvas = document.getElementById('photo-canvas');
@@ -59,6 +53,11 @@ var OcrView = Backbone.View.extend({
     
     render: function() {
         var self = this;
+        
+        // Get URL query params
+        var query = $.getQueryVars();
+        this.isService = query.service;
+        this.photo.src = query.photo;
         
         // We need to wait for the photo to load before we can work with it
         $(this.photo).one('load', function() {
@@ -188,10 +187,25 @@ var OcrView = Backbone.View.extend({
         this.repaint();
     },
     
+    getText: function() {
+        return _.pluck(this.selectedWords, 'text').join(' ');
+    },
+    
     updateTextbox: _.debounce(function() {
-        var text = _.pluck(this.selectedWords, 'text').join(' ');
-        this.ocrTextbox.val(text);
+        this.ocrTextbox.val(this.getText());
     }, 250),
+    
+    submit: function() {
+        console.log('Submitting ocr text');
+        if (this.isService) {
+            window.location.href = 'app://ocr?' + $.param({
+                success: true,
+                message: this.getText()
+            });
+        } else {
+            //TODO: what do we do with this data?
+        }
+    },
     
     selectWordsAt: function(point) {
         // Find word whose box contains point
@@ -304,12 +318,5 @@ var OcrView = Backbone.View.extend({
     
     alertError: function(message) {
         window.alert('Error: ' + message);
-    },
-    
-    // Used to stop taps from de-selecting the ocr textbox
-    preventDefault: function(evt) {
-        evt.preventDefault();
-        evt.stopPropagation();
-        return false;
     }
 });

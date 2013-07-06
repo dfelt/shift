@@ -1,31 +1,56 @@
 
-var OcrOptionsView = Backbone.View.extend({
+window.OcrOptionsView = Backbone.View.extend({
     
     events: {
-        'vclick #camera-button':        'getCameraPicture',
-        'vclick #photo-library-button': 'getLibraryPicture'
+        'pagebeforeshow'               : 'readParams',
+        'vclick #camera-button'        : 'getCameraPicture',
+        'vclick #photo-library-button' : 'getLibraryPicture'
     },
+    
+    isService: false,
+    ocrType: 'generic',
     
     initialize: function() {
         this.setElement($('#ocr-options'));
     },
+    
+    readParams: function() {
+        var query = $.getQueryVars();
+        console.log('ocropts: ' + JSON.stringify(query));
+        this.ocrType = query.ocrtype || 'generic';
+        this.isService = (query.service === 'true');
+        if (this.isService) {
+            this.getCameraPicture();
+        }
+    },
 
     getCameraPicture: function() {
-        this.getPicture(navigator.camera.PictureSourceType.CAMERA);
+        this.getPhoto(navigator.camera.PictureSourceType.CAMERA);
     },
 
     getLibraryPicture: function() {
-        this.getPicture(navigator.camera.PictureSourceType.PHOTOLIBRARY);
+        this.getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY);
     },
     
-    getPicture: function(pictureSource) {
-        var channel = this.options.channel;
+    getPhoto: function(pictureSource) {
+        console.log('Getting photo');
+        var self = this;
         var setPhoto = function(photoUri) {
-            channel.trigger('ocr:setPhoto', photoUri);
-            window.location.hash = 'ocr';
+            window.location.hash = 'ocr?' + $.param({
+                service: this.isService,
+                ocrType: this.ocrType,
+                photo: photoUri
+            });
         };
         var alertError = function(message) {
-            window.alert('Error: ' + message);
+            if (self.isService) {
+                window.location.href = 'app://ocr?' + $.param({
+                    success: false,
+                    message: message
+                });
+            } else {
+                window.alert(message);
+            }
         };
         var size = Math.max($(window).width(), $(window).height());
         var opts = {

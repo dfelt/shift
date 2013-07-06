@@ -29,6 +29,7 @@ cordova.define('cordova/plugin/ocr', function(require, exports, module) {
     charSet.ALPHANUM  = charSet.alpha + charSet.numeric;
     
     var defaultOptions = {
+        lang: null,
         pageSegMode: null,
         whiteList: null,
         blackList: null,

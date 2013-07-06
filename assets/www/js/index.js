@@ -1,12 +1,9 @@
 
 $(document).on('deviceready', function() {
-    // channel is used to send messages between views
-    var channel = _.extend({}, Backbone.Events);
-    
     // Initialize views
     //new HomeView();
-    new OcrOptionsView({ channel: channel });
-    new OcrView({ channel: channel });
+    new OcrOptionsView();
+    new OcrView();
 });
 /**
  *==================================
