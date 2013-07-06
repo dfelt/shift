@@ -70,12 +70,9 @@ public class Shift extends DroidGap {
                 	String success = uri.getQueryParameter("success");
                 	String message = uri.getQueryParameter("message");
                 	if ("true".equals(success)) {
-                    	Log.d("Shift", "OCR success! " + message);
                     	generateResult(message);
                     	finish();
                 	} else {
-                    	Log.d("Shift", "OCR error! " + message);
-
                     	Intent result = new Intent();
                     	result.putExtra("score", 0.0);
                     	setResult(Activity.RESULT_CANCELED, result);
@@ -100,7 +97,7 @@ public class Shift extends DroidGap {
 			// the weight in this value
 			double score;
 			try {
-				score = Integer.parseInt(message);
+				score = Double.parseDouble(message);
 			} catch (NumberFormatException e) {
 				score = 0;
 			}
