@@ -56,8 +56,10 @@ window.OcrView = Backbone.View.extend({
         
         // Get URL query params
         var query = $.getQueryVars();
-        this.isService = query.service;
+        this.isService = query.service === 'true';
         this.photo.src = query.photo;
+        
+        console.log('ocr lang: ' + query.lang);
         
         // We need to wait for the photo to load before we can work with it
         $(this.photo).one('load', function() {
@@ -75,7 +77,9 @@ window.OcrView = Backbone.View.extend({
         this.currentTouchPaths = {};
         this.finishedTouchPaths = [];
         this.ocrTextbox.val('');
-        this.ocr.getWordBoxes(this.photo.src, this.setWordBoxes, this.alertError);
+        
+        var ocrOpts = _.pick(query, 'lang', 'whiteList', 'blackList', 'pageSegMode', 'rectangle');
+        this.ocr.getWordBoxes(this.photo.src, this.setWordBoxes, this.alertError, query);
         return this;
     },
     
@@ -141,18 +145,27 @@ window.OcrView = Backbone.View.extend({
     },
     
     setWordTexts: function(words) {
-        // Remove low-confidence words
+        // Remove whitespace and low-confidence words
         words = _.reject(words, function(w) {
-            return w.text === '' || w.confidence < this.confidenceThreshold;
+            return /\s/.test(w.text) || w.confidence < this.confidenceThreshold;
         });
         
         if (words.length === 0) {
+            var isService = this.isService;
+            
             navigator.notification.confirm(
-                    'No text found. Retake photo?',
-                    function(btn) {
-                        if (btn === 1) { window.location.hash = ''; }
-                    },
-                    'Retry?');
+                'No text found. Retake photo?',
+                function(btn) {
+                    if (btn === 1) {
+                        window.history.back();
+                    } else if (isService) {
+                        window.location.href = 'app://ocr?' + $.params({
+                            success: false,
+                            message: 'Camera cancelled'
+                        });
+                    }
+                },
+                'Retry?');
         }
         
         _.each(words, function(w, i) { w.index = i; });
