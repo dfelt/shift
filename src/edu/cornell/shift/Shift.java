@@ -19,20 +19,16 @@
 
 package edu.cornell.shift;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.apache.cordova.Config;
+import org.apache.cordova.CordovaWebViewClient;
+import org.apache.cordova.DroidGap;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
-
-import org.apache.cordova.*;
-import org.json.JSONObject;
 
 public class Shift extends DroidGap {
 	
@@ -54,9 +50,9 @@ public class Shift extends DroidGap {
 		Log.d("Shift", "Got intent: " + getIntent());
 		String act = getIntent().getAction();
         if (act.equals(ACTION_GENERIC_OCR)) {
-        	runOcr("generic");
+        	runOcr("eng");
         } else if (act.equals(ACTION_SCALE_OCR)) {
-        	runOcr("scale");
+        	runOcr("7seg");
         } else {
     		// Set by <content src="index.html" /> in config.xml
     		//loadUrl(Config.getStartUrl());
@@ -64,7 +60,7 @@ public class Shift extends DroidGap {
         }
 	}
 	
-	private void runOcr(String ocrType) {
+	private void runOcr(String lang) {
 		appView.setWebViewClient(new CordovaWebViewClient(this, appView) {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -75,10 +71,7 @@ public class Shift extends DroidGap {
                 	String message = uri.getQueryParameter("message");
                 	if ("true".equals(success)) {
                     	Log.d("Shift", "OCR success! " + message);
-                    	
-                    	Intent result = new Intent();
-                    	result.putExtra("score", 5.0);
-                    	setResult(Activity.RESULT_OK, result);
+                    	generateResult(message);
                     	finish();
                 	} else {
                     	Log.d("Shift", "OCR error! " + message);
@@ -94,6 +87,25 @@ public class Shift extends DroidGap {
                 }
             }
 		});
-		loadUrl(Config.getStartUrl() + "#ocr-options?service=true&ocrtype=" + ocrType);
+		loadUrl(Config.getStartUrl() + "#ocr-options?service=true&lang=" + lang);
+	}
+	
+	private void generateResult(String message) {
+    	Intent result = new Intent();
+		String act = getIntent().getAction();
+		if (act.equals(ACTION_GENERIC_OCR)) {
+			result.putExtra("text", message);
+		} else if (act.equals(ACTION_SCALE_OCR)) {
+			// Ohmage requires that we send back "score" variable, so we put
+			// the weight in this value
+			double score;
+			try {
+				score = Integer.parseInt(message);
+			} catch (NumberFormatException e) {
+				score = 0;
+			}
+	    	result.putExtra("score", score);
+	    	setResult(Activity.RESULT_OK, result);
+		}
 	}
 }
