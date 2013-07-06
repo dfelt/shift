@@ -121,9 +121,9 @@ public class Ocr extends CordovaPlugin {
 	private void setOptions(JSONObject options) throws JSONException, IOException {
 		if (options == null) { return; }
 		
-		String lang = options.optString("lang");
+		String lang = options.optString("lang", null);
 		if (lang != null) {
-			// This resets all parameters previously set
+			// This resets all previously set parameters
 			tess.init(getTessPath(), lang);
 			image = null;
 			imageUri = null;
@@ -134,17 +134,17 @@ public class Ocr extends CordovaPlugin {
 			tess.setPageSegMode(pageSegMode);
 		}
 		
-		String whiteList = options.optString("whiteList");
-		if (whiteList != null) {
+		String whiteList = options.optString("whiteList", null);
+		if (whiteList != null && !whiteList.equals("null")) {
 			tess.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, whiteList);
 		}
 		
-		String blackList = options.optString("blackList");
-		if (blackList != null) {
+		String blackList = options.optString("blackList", null);
+		if (blackList != null && !blackList.equals("null")) {
 			tess.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, blackList);
 		}
 		
-		JSONObject r = options.optJSONObject("rectangle");
+		JSONObject r = options.optJSONObject("rect");
 		if (r != null) {
 			tess.setRectangle(r.getInt("x"), r.getInt("y"), r.getInt("width"), r.getInt("height"));
 		}
@@ -209,10 +209,8 @@ public class Ocr extends CordovaPlugin {
 		// Move data files from assets to filesystem
 		for (String fileName : files) {
 			File file = new File(tessdata, fileName);
-			Log.d(TAG, "Moving file: " + file);
 			if (file.exists()) { continue; }
 			
-			Log.d(TAG, "Doesn't exist");
 			InputStream in = ctx.getAssets().open(TESSDATA_PATH + File.separator + fileName);
 			OutputStream out = new FileOutputStream(file);
 			
@@ -237,7 +235,6 @@ public class Ocr extends CordovaPlugin {
 			box.put("y", scale * r.top);
 			box.put("w", scale * r.width());
 			box.put("h", scale * r.height());
-			Log.d(TAG, box.toString());
 			result.put(box);
 		}
 		return result;
