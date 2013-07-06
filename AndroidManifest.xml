@@ -61,6 +61,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+    		<intent-filter>
+        		<action android:name="edu.cornell.shift.GENERIC_OCR" />
+        		<action android:name="edu.cornell.shift.SCALE_OCR" />
+    		</intent-filter>
         </activity>
         
         <!-- ZXing activities --> 
