@@ -18,6 +18,7 @@ window.OcrView = Backbone.View.extend({
     selectedWordColor:   'rgba(255, 255, 0, 0.4)',
     clearDuration: 1000,
     confidenceThreshold: 50,
+    defaultLanguage: 'eng',
     
     photo: new Image(),
     scale: 1.0,
@@ -31,15 +32,15 @@ window.OcrView = Backbone.View.extend({
     
     lastDrawTime: 0,
     
-    ocrOptions: {},
-    
     isService: false,
+    
+    initLanguage: null,
     
     initialize: function(options) {
         this.setElement($('#ocr'));
         
-        this.photoCanvas = document.getElementById('photo-canvas');
-        this.drawCanvas  = document.getElementById('draw-canvas');
+        this.photoCanvas = $('#photo-canvas')[0];
+        this.drawCanvas  = $('#draw-canvas')[0];
         this.photoCtx = this.photoCanvas.getContext('2d');
         this.drawCtx = this.drawCanvas.getContext('2d');
         
@@ -48,7 +49,8 @@ window.OcrView = Backbone.View.extend({
         // Workaround for: code.google.com/p/android/issues/detail?id=35474
         $(this.photoCanvas).parents().css('overflow', 'visible');
         
-        _.bindAll(this, 'repaint', 'setWordBoxes', 'alertError', 'setWordTexts');
+        _.bindAll(this, 'repaint', 'onOcrInit', 'onOcrSetImage', 'onOcrGetWords',
+                'onOcrGetUTF8Text', 'onOcrGetWords2', 'onOcrGetResults', 'alertError');
     },
     
     render: function() {
@@ -59,14 +61,15 @@ window.OcrView = Backbone.View.extend({
         this.isService = query.service === 'true';
         this.photo.src = query.photo;
         
-        console.log('ocr lang: ' + query.lang);
-        
         // We need to wait for the photo to load before we can work with it
         $(this.photo).one('load', function() {
             //$(this.photoCanvas).fadeIn(2000, function() {
             //    $('#draw-canvas').show();
             //});
             $(window).on('resize', self.repaint).resize();
+            
+            // Workaround: https://code.google.com/p/android/issues/detail?id=35474
+            this.drawCanvas.width = this.drawCanvas.width;
         }).each(function() {
             if (this.complete) { $(this).load(); }
         });
@@ -78,8 +81,13 @@ window.OcrView = Backbone.View.extend({
         this.finishedTouchPaths = [];
         this.ocrTextbox.val('');
         
-        var ocrOpts = _.pick(query, 'lang', 'whiteList', 'blackList', 'pageSegMode', 'rectangle');
-        this.ocr.getWordBoxes(this.photo.src, this.setWordBoxes, this.alertError, query);
+        var lang = query.lang || this.initLanguage || this.defaultLanguage;
+        if (lang !== this.initLanguage) {
+            this.initLanguage = lang;
+            this.ocr.init(this.onOcrInit, this.alertError, this.initLanguage);
+        } else {
+            this.onOcrInit();
+        }
         return this;
     },
     
@@ -127,7 +135,18 @@ window.OcrView = Backbone.View.extend({
         _.each(this.currentTouchPaths, this.clearPath, this);
     },
     
-    setWordBoxes: function(words) {
+    // After OCR init finishes, set the image
+    onOcrInit: function() {
+        this.ocr.setImage(this.onOcrSetImage, this.alertError, this.photo.src);
+    },
+    
+    // After OCR setImage finishes, get word boxes
+    onOcrSetImage: function() {
+        this.ocr.getWords(this.onOcrGetWords, this.alertError);
+    },
+    
+    // After we get word boxes, highlight them on the canvas, and begin recognition
+    onOcrGetWords: function(words) {
         for (var i = 0; i < words.length; i++) {
             words[i].selected = false;
             words[i].index = i;
@@ -137,19 +156,43 @@ window.OcrView = Backbone.View.extend({
         this.selectedWords = [];
         
         this.repaint();
+        
+        // Show a loading indicator if the user selects words before recognition is finished
         $(this.drawCanvas).on('touchend.loading', function() {
             $.mobile.loading('show');
         });
         
-        this.ocr.getWords(this.photo.src, this.setWordTexts, this.alertError);
+        // We need to force recognition before we can get individual word text
+        this.ocr.getUTF8Text(this.onOcrGetUTF8Text, this.alertError);
     },
     
-    setWordTexts: function(words) {
+    // After recognition is finished, get the word boxes again, as they may
+    // have changed
+    onOcrGetUTF8Text: function() {
+        this.ocr.getWords(this.onOcrGetWords2, this.alertError);
+    },
+    
+    // After getting the updated word boxes, we get the actual word text
+    onOcrGetWords2: function(words) {
+        this.tempWordBoxes = words;
+        this.ocr.getResults(this.onOcrGetResults, this.alertError,
+                this.ocr.PageIteratorLevel.RIL_WORD);
+    },
+    
+    // After we get the word texts, highlight them in the picture
+    onOcrGetResults: function(words) {
+        // Join together word texts and word boxes
+        for (var i = 0; i < words.length; i++) {
+            _.extend(words[i], this.tempWordBoxes[i]);
+        }
+        this.tempWordBoxes = null;
+        
         // Remove whitespace and low-confidence words
         words = _.reject(words, function(w) {
-            return /\s/.test(w.text) || w.confidence < this.confidenceThreshold;
+            return (/^\s*$/).test(w.text) || w.confidence < this.confidenceThreshold;
         });
         
+        // Show notification if no words found
         if (words.length === 0) {
             var isService = this.isService;
             
@@ -166,6 +209,7 @@ window.OcrView = Backbone.View.extend({
                     }
                 },
                 'Retry?');
+            return;
         }
         
         _.each(words, function(w, i) { w.index = i; });
@@ -289,9 +333,9 @@ window.OcrView = Backbone.View.extend({
             this.selectWordsAt(point);
         }
         
-        // Workaround: http://stackoverflow.com/questions/14339524/canvas-globalcompositeoperation-issue-on-samsung-galaxy-s3-4-1-1-4-1-2
         var c = $(this.drawCanvas);
-        $(c).css('margin-right', c.css('margin-right') === "0px" ? "1px" : "0px");
+        // Workaround: http://stackoverflow.com/questions/14339524/canvas-globalcompositeoperation-issue-on-samsung-galaxy-s3-4-1-1-4-1-2
+        c.css('margin-right', c.css('margin-right') === "0px" ? "1px" : "0px");
     },
     
     endDraw: function(evt) {
