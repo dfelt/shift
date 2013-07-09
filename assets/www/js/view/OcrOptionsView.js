@@ -14,7 +14,7 @@ window.OcrOptionsView = Backbone.View.extend({
         this.setElement($('#ocr-options'));
     },
     
-    readParams: function() {
+    readParams: function(e) {
         var query = $.getQueryVars();
         this.isService = (query.service === 'true');
         this.lang = query.lang || 'eng';
@@ -32,14 +32,13 @@ window.OcrOptionsView = Backbone.View.extend({
     },
     
     getPhoto: function(pictureSource) {
-        console.log('Getting photo');
         var self = this;
-        var setPhoto = function(photoUri) {
-            window.location.hash = 'ocr?' + $.param({
-                photo: photoUri,
-                service: self.isService,
-                lang: self.lang
-            });
+        var gotoOcrPage = function(photoUri) {
+            var page = $('#ocr')[0];
+            $.data(page, 'photoUri', photoUri);
+            $.data(page, 'service', false);
+            $.data(page, 'lang', self.lang);
+            $.mobile.changePage($(page));
         };
         var alertError = function(message) {
             if (self.isService) {
@@ -59,6 +58,6 @@ window.OcrOptionsView = Backbone.View.extend({
                 targetHeight:    size
         };
         
-        navigator.camera.getPicture(setPhoto, alertError, opts);
+        navigator.camera.getPicture(gotoOcrPage, alertError, opts);
     }
 });
