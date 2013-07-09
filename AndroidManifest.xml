@@ -56,7 +56,8 @@
     	<!-- Main activity -->
         <activity android:name="Shift" android:label="@string/app_name"
                 android:theme="@android:style/Theme.Black.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale">
+                android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
+                android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
