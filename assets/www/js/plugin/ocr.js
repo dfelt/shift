@@ -20,48 +20,43 @@ cordova.define('cordova/plugin/ocr', function(require, exports, module) {
         PSM_COUNT: 13
     };
     
-    var charSet = {};
-    charSet.LOWER     = 'abcdefghijklmnopqrstuvwxyz';
-    charSet.UPPER     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    charSet.NUM       = '0123456789';
-    charSet.PUNCT     = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
-    charSet.ALPHA     = charSet.lowercase + charSet.uppercase;
-    charSet.ALPHANUM  = charSet.alpha + charSet.numeric;
-    
-    var defaultOptions = {
-        lang: null,
-        pageSegMode: null,
-        whiteList: null,
-        blackList: null,
-        rectangle: null
-    };
-    
-    var run = function(action, imageUri, onSuccess, onFailure, options) {
-        if (typeof options === 'object' && options !== null) {
-            // Set values to defaults, if they don't exist
-            for (var key in defaultOptions) {
-                if (!(key in options)) {
-                    options[key] = defaultOptions[key];
-                }
-            }
-        } else {
-            options = null;
-        }
-        
-        exec(onSuccess, onFailure, 'Ocr', action, [imageUri, options]);
+    var pageIteratorLevel = {
+        RIL_BLOCK:    0,
+        RIL_PARA:     1,
+        RIL_TEXTLINE: 2,
+        RIL_WORD:     3,
+        RIL_SYMBOL:   4
     };
     
     var act = function(action) {
-        return function(imageUri, onSuccess, onFailure, options) {
-            run(action, imageUri, onSuccess, onFailure, options);
+        return function(onSuccess, onFailure) {
+            var extraArgs = Array.prototype.slice.call(arguments, 2);
+            exec(onSuccess, onFailure, 'Ocr', action, extraArgs);
         };
     };
     
     module.exports = {
-        PageSegMode:  pageSegMode,
-        CharSet:      charSet,
-        getWordBoxes: act('getWordBoxes'),
-        getText:      act('getText'),
-        getWords:     act('getWords')
+        PageSegMode              : pageSegMode,
+        PageIteratorLevel        : pageIteratorLevel,
+        
+        VAR_CHAR_WHITELIST       : 'tessedit_char_whitelist',
+        VAR_CHAR_BLACKLIST       : 'tessedit_char_blacklist',
+        
+        init                     : act('init'),
+        getInitLanguagesAsString : act('getInitLanguagesAsString'),
+        clear                    : act('clear'),
+        setVariable              : act('setVariable'),
+        setPageSegMode           : act('setPageSegMode'),
+        setRectangle             : act('setRectangle'),
+        setImage                 : act('setImage'),
+        getUTF8Text              : act('getUTF8Text'),
+        meanConfidence           : act('meanConfidence'),
+        wordConfidences          : act('wordConfidences'),
+        getRegions               : act('getRegions'),
+        getTextlines             : act('getTextlines'),
+        getStrips                : act('getStrips'),
+        getWords                 : act('getWords'),
+        getCharacters            : act('getCharacters'),
+        getResults               : act('getResults')
     };
 });

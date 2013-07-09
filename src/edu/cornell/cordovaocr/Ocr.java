@@ -24,6 +24,7 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.util.Log;
 
+import com.googlecode.leptonica.android.Pixa;
 import com.googlecode.tesseract.android.ResultIterator;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
@@ -34,9 +35,28 @@ public class Ocr extends CordovaPlugin {
     
     private static final String TESSDATA_PATH = "tessdata";
 
-    private static final String GET_TEXT = "getText";
-    private static final String GET_WORDS = "getWords";
-    private static final String GET_WORD_BOXES = "getWordBoxes";
+    private static final String INIT                         = "init";
+    private static final String GET_INIT_LANGUAGES_AS_STRING = "getInitLanguagesAsString";
+    private static final String CLEAR                        = "clear";
+    private static final String SET_VARIABLE                 = "setVariable";
+    private static final String SET_PAGE_SEG_MODE            = "setPageSegMode";
+    private static final String SET_RECTANGLE                = "setRectangle";
+    private static final String SET_IMAGE                    = "setImage";
+    private static final String GET_UTF8_TEXT                = "getUTF8Text";
+    private static final String MEAN_CONFIDENCE              = "meanConfidence";
+    private static final String WORD_CONFIDENCES             = "wordConfidences";
+    private static final String GET_REGIONS                  = "getRegions";
+    private static final String GET_TEXTLINES                = "getTextlines";
+    private static final String GET_STRIPS                   = "getStrips";
+    private static final String GET_WORDS                    = "getWords";
+    private static final String GET_CHARACTERS               = "getCharacters";
+    private static final String GET_RESULTS                  = "getResults";
+    
+    private static final List<String> ACTIONS = Arrays.asList(
+    	INIT, GET_INIT_LANGUAGES_AS_STRING, CLEAR, SET_VARIABLE, SET_PAGE_SEG_MODE, SET_RECTANGLE,
+    	SET_IMAGE, GET_UTF8_TEXT, MEAN_CONFIDENCE, WORD_CONFIDENCES, GET_REGIONS, GET_TEXTLINES,
+    	GET_STRIPS, GET_WORDS, GET_CHARACTERS, GET_RESULTS
+    );
     
     private static final int BYTES_PER_PIXEL = 4;
     private static final int BITMAP_MEM_LIMIT = 5000000;
@@ -46,16 +66,18 @@ public class Ocr extends CordovaPlugin {
     CallbackContext callbackContext;
     
 	TessBaseAPI tess;
+	ResultIterator resultIterator;
 	Bitmap image;
 	Uri imageUri;
 	int imageScale;
 	
 	public Ocr() {
+		tess = new TessBaseAPI();
 	}
 	
 	@Override
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
-		if (!Arrays.asList(GET_TEXT, GET_WORDS, GET_WORD_BOXES).contains(action)) {
+		if (!ACTIONS.contains(action)) {
 			return false;
 		}
 		
@@ -78,75 +100,82 @@ public class Ocr extends CordovaPlugin {
 	}
 	
 	public void executeAsync() throws JSONException, FileNotFoundException, IOException {
-		if (tess == null) {
-			tess = new TessBaseAPI();
-	        tess.init(getTessPath(), DEFAULT_LANG);
-		}
-		
-		Log.d(TAG, "Image URI: " + args.getString(0));
-		
-		setOptions(args.optJSONObject(1));
-		setImage(args.getString(0));
-		
 		Log.d(TAG, "Executing action: " + action);
-
 		
-		if (GET_TEXT.equals(action)) {
-	        callbackContext.success(tess.getUTF8Text());
+		if (INIT.equals(action)) {
+			tess.init(getTessPath(), args.optString(0, DEFAULT_LANG));
+			callbackContext.success();
+		}
+		else if (GET_INIT_LANGUAGES_AS_STRING.equals(action)) {
+			callbackContext.success(tess.getInitLanguagesAsString());
+		}
+		else if (CLEAR.equals(action)) {
+			tess.clear();
+			callbackContext.success();
+		}
+		else if (SET_VARIABLE.equals(action)) {
+			String key = args.getString(0);
+			String val = args.getString(1);
+			boolean success = tess.setVariable(key, val);
+			if (success) {
+				callbackContext.success();
+			} else {
+				callbackContext.error("Lookup failed for key: " + key);
+			}
+		}
+		else if (SET_PAGE_SEG_MODE.equals(action)) {
+			tess.setPageSegMode(args.getInt(0));
+			callbackContext.success();
+		}
+		else if (SET_RECTANGLE.equals(action)) {
+			JSONObject r = args.getJSONObject(0);
+			tess.setRectangle(r.getInt("x"), r.getInt("y"), r.getInt("width"), r.getInt("height"));
+			callbackContext.success();
+		}
+		else if (SET_IMAGE.equals(action)) {
+			setImage(args.getString(0));
+			callbackContext.success();
+		}
+		else if (GET_UTF8_TEXT.equals(action)) {
+			callbackContext.success(tess.getUTF8Text());
+		}
+		else if (MEAN_CONFIDENCE.equals(action)) {
+			callbackContext.success(tess.meanConfidence());
+		}
+		else if (WORD_CONFIDENCES.equals(action)) {
+			callbackContext.success(new JSONArray(Arrays.asList(tess.wordConfidences())));
+		}
+		else if (GET_REGIONS.equals(action)) {
+			callbackContext.success(getBoxes(tess.getRegions()));
+		}
+		else if (GET_TEXTLINES.equals(action)) {
+			callbackContext.success(getBoxes(tess.getTextlines()));
+		}
+		else if (GET_STRIPS.equals(action)) {
+			callbackContext.success(getBoxes(tess.getStrips()));
 		}
 		else if (GET_WORDS.equals(action)) {
-			// We need to force recognition before we can iterate over the words
+			callbackContext.success(getBoxes(tess.getWords()));
+		}
+		else if (GET_CHARACTERS.equals(action)) {
+			callbackContext.success(getBoxes(tess.getWords()));
+		}
+		else if (GET_RESULTS.equals(action)) {
+			// We need to force recognition before we can use the ResultIterator
 			tess.getUTF8Text();
-
-			JSONArray result = getWordBoxes(tess.getWords().getBoxRects(), imageScale);
 			
-			final int rilWord = TessBaseAPI.PageIteratorLevel.RIL_WORD;
+			int level = args.getInt(0);
+			JSONArray results = new JSONArray();
 			ResultIterator it = tess.getResultIterator();
 			it.begin();
-			for (int i = 0; i < result.length(); i++, it.next(rilWord)) {
-				JSONObject word = result.getJSONObject(i);
-				word.put("text", it.getUTF8Text(rilWord));
-				word.put("confidence", it.confidence(rilWord));
-			}
+			do {
+				JSONObject obj = new JSONObject();
+				obj.put("text", it.getUTF8Text(level));
+				obj.put("confidence", it.confidence(level));
+				results.put(obj);
+			} while (it.next(level));
 			
-			callbackContext.success(result);
-		}
-		else if (GET_WORD_BOXES.equals(action)) {
-			JSONArray result = getWordBoxes(tess.getWords().getBoxRects(), imageScale);
-			callbackContext.success(result);
-		}
-	}
-
-	/** Apply configuration options */
-	private void setOptions(JSONObject options) throws JSONException, IOException {
-		if (options == null) { return; }
-		
-		String lang = options.optString("lang", null);
-		if (lang != null) {
-			// This resets all previously set parameters
-			tess.init(getTessPath(), lang);
-			image = null;
-			imageUri = null;
-		}
-		
-		int pageSegMode = options.optInt("pageSegMode", -1);
-		if (pageSegMode != -1) {
-			tess.setPageSegMode(pageSegMode);
-		}
-		
-		String whiteList = options.optString("whiteList", null);
-		if (whiteList != null && !whiteList.equals("null")) {
-			tess.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, whiteList);
-		}
-		
-		String blackList = options.optString("blackList", null);
-		if (blackList != null && !blackList.equals("null")) {
-			tess.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, blackList);
-		}
-		
-		JSONObject r = options.optJSONObject("rect");
-		if (r != null) {
-			tess.setRectangle(r.getInt("x"), r.getInt("y"), r.getInt("width"), r.getInt("height"));
+			callbackContext.success(results);
 		}
 	}
 	
@@ -226,15 +255,16 @@ public class Ocr extends CordovaPlugin {
 		return ctx.getFilesDir().getAbsolutePath();
 	}
 	
-	private static JSONArray getWordBoxes(List<Rect> rects, int scale) throws JSONException {
+	private JSONArray getBoxes(Pixa pixa) throws JSONException {
+		List<Rect> rects = pixa.getBoxRects();
 		JSONArray result = new JSONArray();
 		for (int i = 0; i < rects.size(); i++) {
 			Rect r = rects.get(i);
 			JSONObject box = new JSONObject();
-			box.put("x", scale * r.left);
-			box.put("y", scale * r.top);
-			box.put("w", scale * r.width());
-			box.put("h", scale * r.height());
+			box.put("x", imageScale * r.left);
+			box.put("y", imageScale * r.top);
+			box.put("w", imageScale * r.width());
+			box.put("h", imageScale * r.height());
 			result.put(box);
 		}
 		return result;
