@@ -2,9 +2,9 @@
 window.OcrOptionsView = Backbone.View.extend({
     
     events: {
-        'pagebeforeshow'               : 'readParams',
-        'vclick #camera-button'        : 'getCameraPicture',
-        'vclick #photo-library-button' : 'getLibraryPicture'
+        'pagebeforeshow'            : 'readParams',
+        'tap #ocr-camera-btn'       : 'getCameraPicture',
+        'tap #photo-library-button' : 'getLibraryPicture'
     },
     
     isService: false,
@@ -31,9 +31,14 @@ window.OcrOptionsView = Backbone.View.extend({
         this.getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY);
     },
     
-    getPhoto: function(pictureSource) {
+    // We debounce because of android double-tap bug
+    getPhoto: _.debounce(function(pictureSource) {
+        console.log('getPhoto');
         var self = this;
         var gotoOcrPage = function(photoUri) {
+            $('#ocr-camera-btn').button('enable');
+            $.mobile.loading('hide');
+            
             var page = $('#ocr')[0];
             $.data(page, 'photoUri', photoUri);
             $.data(page, 'service', false);
@@ -41,12 +46,15 @@ window.OcrOptionsView = Backbone.View.extend({
             $.mobile.changePage($(page));
         };
         var alertError = function(message) {
+            $('#ocr-camera-btn').button('enable');
+            $.mobile.loading('hide');
+            
             if (self.isService) {
                 window.location.href = 'app://ocr?' + $.param({
                     success: false,
                     message: message
                 });
-            } else {
+            } else if (!(/cancel/i).test(message)){
                 window.alert(message);
             }
         };
@@ -58,6 +66,8 @@ window.OcrOptionsView = Backbone.View.extend({
                 targetHeight:    size
         };
         
+        $('#ocr-camera-btn').button('disable');
+        $.mobile.loading('show');
         navigator.camera.getPicture(gotoOcrPage, alertError, opts);
-    }
+    }, 1000)
 });
