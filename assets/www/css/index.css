@@ -14,9 +14,16 @@ body {
 /************************************************************
  * Home page
  ************************************************************/
+ 
+#home {
+}
 
-#content {
-	display: none;
+/* Place at bottom of page */
+#home-action-text {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	text-align: center;
 }
 
 #content p {
@@ -38,20 +45,34 @@ body {
 	border-radius: 0 !important;
 }
 
-#scanCode .ui-icon {
+.scanCode .ui-icon {
 	background: url(../img/icons/195-barcode.png) 50% 50% no-repeat;
 }
 
-#myAccount .ui-icon {
+.myAccount .ui-icon {
 	background: url(../img/icons/111-user.png) 50% 50% no-repeat;
 }
 
-#ocr-btn .ui-icon {
+.ocr-btn .ui-icon {
 	background: url(../img/icons/86-camera.png) 50% 50% no-repeat;
 }
 
-#voice-btn .ui-icon {
+.voice-btn .ui-icon {
 	background: url(../img/icons/66-microphone.png) 50% 50% no-repeat;
+}
+
+
+/************************************************************
+ * OCR Options page
+ ************************************************************/
+ 
+ /* Center the phone image, and bound its size */
+#ocropt-phone-wrap {
+	text-align: center;
+}
+#ocropt-phone-wrap > img {
+	max-width: 100%;
+	vertical-align: middle;
 }
 
 
