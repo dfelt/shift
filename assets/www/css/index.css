@@ -15,7 +15,16 @@ body {
  * Home page
  ************************************************************/
  
-#home {
+#home-icon-grid {
+	font-size: small;
+	font-weight: bold;
+	text-align: center;
+	text-decoration: none;
+}
+
+#home-icon-grid > div > a {
+	text-decoration: none;
+	color: #333;
 }
 
 /* Place at bottom of page */
@@ -92,7 +101,7 @@ body {
 	}
 }
 
-.center-button {
+.center-text {
 	text-align: center;
 }
 
