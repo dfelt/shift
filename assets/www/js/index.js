@@ -2,60 +2,10 @@
 $(document).on('deviceready', function() {
     // Initialize views
     //new HomeView();
+    new ScanView();
     new OcrOptionsView();
     new OcrView();
 });
-/**
- *==================================
- * Function for scanning the Qrcode
- *==================================
-**/  
-
-var scanCode = function() {
-   window.plugins.barcodeScanner.scan(
-       function(result) {
-       document.getElementById("content").style.display = "inline";
-       document.getElementById("ScannedCode").innerHTML="Scanned Code: " + result.text;
-       changeDisplay (result.text);
-       $('#launch').data('scannedCode', result.text);
-       if ($('#launch').data('appName') == undefined){
-           //TODO: launch the url-pannel
-           $("#chooseUrl").click();
-       }
-   }, function(error) {
-       alert("Scan failed: " + error);
-   });
-}
-
-/**
- *===========================================
- * Function to divide and display scannedCode 
- *===========================================
-**/ 
-
-function changeDisplay (scannedCode){
-   document.getElementById("ScannedCode").innerHTML="Scanned Code: " + scannedCode;
-   var obj = jsonBuilder (scannedCode);
-   document.getElementById("mrn").innerHTML="MRN: " + obj.mrn;
-   document.getElementById("acc").innerHTML="Exam: " + obj.acc;
-   document.getElementById("pt").innerHTML="Patient Name: " + obj.pt;
-}
-
-/**
- *================================================
- * Function for building jSon obj from scannedCode
- *================================================
-**/  
-
-function jsonBuilder (scannedCode){
-   var scannedArr = scannedCode.split(':');
-   var obj = new Object();
-   obj.mrn = scannedArr[0];
-   obj.pt  = scannedArr[1];
-   obj.acc = scannedArr[2];
-   obj.pubmed = scannedArr[3];
-   return obj;
-}
 
 /**
   *======================================================

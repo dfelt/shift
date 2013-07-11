@@ -30,10 +30,6 @@ body {
 	text-indent: 20px;
 }
 
-#center-button {
-	text-align: center;
-}
-
 .nav-glyphish-example .ui-btn .ui-icon {
 	width: 30px !important;
 	height: 30px !important;
@@ -45,7 +41,7 @@ body {
 	border-radius: 0 !important;
 }
 
-.scanCode .ui-icon {
+.scan-btn .ui-icon {
 	background: url(../img/icons/195-barcode.png) 50% 50% no-repeat;
 }
 
@@ -61,6 +57,44 @@ body {
 	background: url(../img/icons/66-microphone.png) 50% 50% no-repeat;
 }
 
+
+/************************************************************
+ * Bookmarks Edit page
+ ************************************************************/
+
+/* Format buttons */
+.bm-edit-grid .ui-block-a, .bm-edit-grid .ui-block-b {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.bm-edit-grid > div > div {
+	width: 100%;
+}
+
+
+/************************************************************
+ * Scan page
+ ************************************************************/
+
+/* Format images */
+#scan-img-wrap > img {
+	vertical-align: middle;
+	max-width: 48%;
+	margin: 0;
+	padding: 0;
+}
+
+@media all and (orientation: portrait) {
+	.portrait-breakpoint .ui-block-a,
+	.portrait-breakpoint .ui-block-b {
+		width: 100%;
+		float: none;
+	}
+}
+
+.center-button {
+	text-align: center;
+}
 
 /************************************************************
  * OCR Options page

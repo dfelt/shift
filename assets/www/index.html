@@ -18,6 +18,7 @@
 	<script src="js/lib/jquery.queryvars.js"></script>
 	<script src="js/lib/underscore-min.js"></script>
 	<script src="js/lib/backbone-min.js"></script>
+	<script src="js/view/ScanView.js"></script>
 	<script src="js/view/OcrOptionsView.js"></script>
 	<script src="js/view/OcrView.js"></script>
 	<script src="js/index.js"></script>
@@ -43,10 +44,11 @@
 		<div data-role="footer" data-id="foot" data-position="fixed" class="nav-glyphish-example">
 			<div data-role="navbar" class="nav-glyphish-example">
 				<ul>
-					<li><a href="#unimpl" class="scanCode" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
+					<li><a href="#scan" class="scan-btn" data-transition="slide" 
+						data-theme="b" data-icon="custom"></a></li>
 					<li><a href="#ocr-options" class="ocr-btn" data-transition="slide"
 						data-theme="b" data-icon="custom"></a></li>
-					<li><a href="#unimpl" class="voice-btn" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
+					<li><a href="#sub" class="voice-btn" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
 				</ul>
 			</div>
 		</div>
@@ -62,14 +64,14 @@
 		<!-- Bookmarks header -->
 		<div data-role="header">
 			<h1>Bookmarks</h1>
-			<a href="#" data-icon="plus" class="ui-btn-right">New</a>
+			<a href="#bm-edit" data-icon="plus" class="ui-btn-right">New</a>
 		</div>
 		<!-- Bookmarks content -->
 		<div data-role="content" id="favorite" data-theme="c">
 			<ul id="bookmarks" data-role="listview" data-split-icon="gear" data-split-theme="b"
 				data-theme="c" data-filter="true" data-filter-placeholder="Search Bookmarks..."
 				data-inset="true">
-				<li><a href="#">Google</a></li>
+				<li><a href="#">Google</a><a href="#bookmarkHandler" data-rel="popup"></a></li>
 			</ul>
 		</div>
 		<!-- Bookmark options popup -->
@@ -77,9 +79,35 @@
 			<ul data-role="listview" data-inset="true" style="min-width: 210px;" data-theme="b"
 				data-overlay-theme="a">
 				<li data-role="divider" data-theme="e">Choose an action</li>
-				<li><a href="#page" data-rel="back">Share</a></li>
-				<li><a href="#page" data-rel="back" onclick="deleteBookmark();">Delete</a></li>
+				<li><a href="#bm-edit" data-rel="dialog">Edit</a>
+				<li><a href="#" data-rel="back">Delete</a></li>
+				<li><a href="#" data-rel="back">Share</a></li>
 			</ul>
+		</div>
+	</div>
+	
+	<!-- Bookmarks Edit page -->
+	<div data-role="page" id="bm-edit">
+		<div data-role="header">
+			<h1>Edit Bookmark</h1>
+		</div>
+		<div data-role="content">
+			<div data-role="fieldcontain">
+				<label for="bm-name" class="ui-input-text">Name:</label>
+				<input type="text" name="bm-name" class="ui-input-text" />
+			</div>
+			<div data-role="fieldcontain">
+				<label for="bm-url" class="ui-input-text">URL:</label>
+				<input type="text" name="bm-url" class="ui-input-text" />
+			</div>
+			<div class="ui-grid-a bm-edit-grid">
+				<div class="ui-block-a">
+					<button data-icon="check" data-inline="true" data-theme="b">OK</button>
+				</div>
+				<div class="ui-block-b">
+					<button data-icon="delete" data-inline="true">Cancel</button>
+				</div>
+			</div>
 		</div>
 	</div>
 	
@@ -113,19 +141,70 @@
 	</div>
 
 	<!-- Barcode scanning page -->
-	<div data-role="page" id="barcode">
-		<div id="content" data-role="content">
-			<p id="appName">Application Name:</p>
-			<p id="ScannedCode"></p>
-			<p id="pt">Patient Name:</p>
-			<p id="mrn">MRN:</p>
-			<p id="acc">Exam:</p>
-			<div id="center-button">
-				<a href="#page" id="launch" data-role="button" data-theme="b" data-inline="true"
-					onclick="openApp(id);">Launch Application</a> <a href="#page" id="bookmarks" data-role="button"
-					data-theme="b" data-inline="true" onclick="addBookmarks();">Add To Bookmarks</a>
+	<div data-role="page" id="scan">
+	
+		<!-- Header -->
+		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
+			<a href="#bookmarks-page" data-rel="dialog">Bookmarks</a>
+			<h1>Shift</h1>
+			<a href="#unimpl" data-rel="popup">Applications</a>
+		</div>
+		
+		<!-- Content -->
+		<div data-role="content">
+			<div id="scan-intro" class="ui-grid-a portrait-breakpoint">
+				<div class="ui-block-a">
+					<h2>Barcode Scanner</h2>
+					<h3>Use your camera to scan a barcode and get its information.</h3>
+					<p>Both barcodes and QR codes can be read.</p>
+					<button id="scan-begin-btn" data-theme="e">Begin</button>
+				</div>
+				<div id="scan-img-wrap" class="ui-block-b">
+					<img src="img/qrcode.png">
+					<img src="img/barcode.png">
+				</div>
+			</div>
+			<div id="scan-form">
+				<div data-role="fieldcontain">
+					<label for="scan-app" class="ui-input-text">App:</label>
+					<input type="text" id="scan-app" name="scan-app" class="ui-input-text" />
+				</div>
+				<div data-role="fieldcontain">
+					<label for="scan-patient" class="ui-input-text">Patient:</label>
+					<input type="text" id="scan-patient" name="scan-patient"
+						class="ui-input-text" />
+				</div>
+				<div data-role="fieldcontain">
+					<label for="scan-mrn" class="ui-input-text">MRN:</label>
+					<input type="text" id="scan-mrn" name="scan-mrn" class="ui-input-text" />
+				</div>
+				<div data-role="fieldcontain">
+					<label for="scan-acc" class="ui-input-text">ACC:</label>
+					<input type="text" id="scan-acc" name="scan-acc" class="ui-input-text" />
+				</div>
+				<div class="center-button">
+					<a href="#page" id="launch" data-role="button" data-theme="b"
+						data-inline="true">Launch App</a>
+					<a href="#page" id="bookmarks" data-role="button" data-theme="b"
+						data-inline="true">Bookmark</a>
+				</div>
 			</div>
 		</div>
+
+		<!-- Footer -->
+		<div data-role="footer" data-id="foot" data-position="fixed" class="nav-glyphish-example">
+			<div data-role="navbar" class="nav-glyphish-example">
+				<ul>
+					<li><a href="#unimpl" class="scan-btn ui-btn-active ui-state-persist"
+						data-theme="b" data-icon="custom" data-rel="popup"></a></li>
+					<li><a href="#ocr-options" class="ocr-btn" data-theme="b"
+						data-icon="custom"></a></li>
+					<li><a href="#unimpl" class="voice-btn" data-theme="b" data-icon="custom"
+						data-rel="popup"></a></li>
+				</ul>
+			</div>
+		</div>
+		
 	</div>
 	
 
@@ -158,7 +237,7 @@
 		<div data-role="footer" data-id="foot" data-position="fixed" class="nav-glyphish-example">
 			<div data-role="navbar" class="nav-glyphish-example">
 				<ul>
-					<li><a href="#unimpl" class="scanCode" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
+					<li><a href="#unimpl" class="scan-btn" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
 					<li><a href="#ocr-options" class="ocr-btn ui-btn-active ui-state-persist" data-theme="b"
 						data-icon="custom"></a></li>
 					<li><a href="#unimpl" class="voice-btn" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
