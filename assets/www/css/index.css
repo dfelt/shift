@@ -15,13 +15,16 @@ body {
  * Home page
  ************************************************************/
  
+/* Format icon grid */
 #home-icon-grid {
 	font-size: small;
 	font-weight: bold;
 	text-align: center;
 	text-decoration: none;
 }
-
+.pad-bottom {
+	padding-bottom: 30px;
+}
 #home-icon-grid > div > a {
 	text-decoration: none;
 	color: #333;
@@ -33,37 +36,6 @@ body {
 	bottom: 0;
 	width: 100%;
 	text-align: center;
-}
-
-#content p {
-	text-indent: 20px;
-}
-
-.nav-glyphish-example .ui-btn .ui-icon {
-	width: 30px !important;
-	height: 30px !important;
-	margin-left: -15px !important;
-	box-shadow: none !important;
-	-moz-box-shadow: none !important;
-	-webkit-box-shadow: none !important;
-	-webkit-border-radius: 0 !important;
-	border-radius: 0 !important;
-}
-
-.scan-btn .ui-icon {
-	background: url(../img/icons/195-barcode.png) 50% 50% no-repeat;
-}
-
-.myAccount .ui-icon {
-	background: url(../img/icons/111-user.png) 50% 50% no-repeat;
-}
-
-.ocr-btn .ui-icon {
-	background: url(../img/icons/86-camera.png) 50% 50% no-repeat;
-}
-
-.voice-btn .ui-icon {
-	background: url(../img/icons/66-microphone.png) 50% 50% no-repeat;
 }
 
 

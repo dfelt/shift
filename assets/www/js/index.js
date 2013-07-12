@@ -1,8 +1,8 @@
 
 $(document).on('deviceready', function() {
     // Initialize views
-    //new HomeView();
     new ScanView();
+    new ScanResultsView();
     new OcrOptionsView();
     new OcrView();
 });

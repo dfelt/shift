@@ -19,6 +19,7 @@
 	<script src="js/lib/underscore-min.js"></script>
 	<script src="js/lib/backbone-min.js"></script>
 	<script src="js/view/ScanView.js"></script>
+	<script src="js/view/ScanResultsView.js"></script>
 	<script src="js/view/OcrOptionsView.js"></script>
 	<script src="js/view/OcrView.js"></script>
 	<script src="js/index.js"></script>
@@ -26,51 +27,56 @@
 
 <body>
 	<!-- Home page -->
-	<div data-role="page" id="page">
+	<div data-role="page" id="home">
 	
 		<!-- Header -->
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
+			<a href="#home" data-icon="home">Home</a>
 			<h1>Shift</h1>
 		</div>
 		
 		<!-- Content -->
 		<div data-role="content" id="home">
 			<div id="home-icon-grid" class="ui-grid-a">
-				<div class="ui-block-a">
+				<div class="ui-block-a pad-bottom">
 					<a href="#ocr-options">
-						<img src="img/camera.png">
-						<p>Text Recognition</p>
+						<img src="img/camera.png"><br>
+						Text Recognition
 					</a>
 				</div>
-				<div class="ui-block-b">
+				<div class="ui-block-b pad-bottom">
 					<a href="#scan">
-						<img src="img/barcode-icon.png">
-						<p>Barcode Scanning</p>
+						<img src="img/barcode-icon.png"><br>
+						Barcode Scanning
 					</a>
 				</div>
 				<div class="ui-block-a">
 					<a href="#bookmarks">
-						<img src="img/bookmark.png">
-						<p>Bookmarks</p>
+						<img src="img/bookmark.png"><br>
+						Bookmarks
 					</a>
 				</div>
 				<div class="ui-block-b">
 					<a href="#apps">
-						<img src="img/briefcase.png">
-						<p>Applications</p>
+						<img src="img/briefcase.png"><br>
+						Applications
 					</a>
 				</div>
 			</div>
 		</div>
 	</div>
 		
+		
 	<!-- Bookmarks page -->
 	<div data-role="page" id="bookmarks">
+	
 		<!-- Bookmarks header -->
-		<div data-role="header">
+		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
+			<a href="#home" data-icon="home">Home</a>
 			<h1>Bookmarks</h1>
-			<a href="#bm-edit" data-icon="plus" class="ui-btn-right">New</a>
+			<a href="#bm-edit" data-rel="dialog" data-icon="plus" class="ui-btn-right">New</a>
 		</div>
+		
 		<!-- Bookmarks content -->
 		<div data-role="content" id="favorite" data-theme="c">
 			<ul id="bm-list" data-role="listview" data-split-icon="gear" data-split-theme="b"
@@ -79,6 +85,7 @@
 				<li><a href="#">Google</a><a href="#bookmarkHandler" data-rel="popup"></a></li>
 			</ul>
 		</div>
+		
 		<!-- Bookmark options popup -->
 		<div data-role="popup" id="bookmarkHandler" data-theme="b">
 			<ul data-role="listview" data-inset="true" style="min-width: 210px;" data-theme="b"
@@ -91,33 +98,52 @@
 		</div>
 	</div>
 	
+	
 	<!-- Bookmarks Edit page -->
 	<div data-role="page" id="bm-edit">
+	
+		<!-- Bookmarks Edit header -->
 		<div data-role="header">
-			<h1>Edit Bookmark</h1>
+			<h1>Bookmark Editor</h1>
 		</div>
+		
+		<!-- Bookmarks Edit content -->
 		<div data-role="content">
 			<div data-role="fieldcontain">
-				<label for="bm-name" class="ui-input-text">Name:</label>
-				<input type="text" name="bm-name" class="ui-input-text" />
+				<label for="bm-app" class="ui-input-text">App:</label>
+				<input type="text" id="bm-app" name="bm-app" class="ui-input-text" />
 			</div>
 			<div data-role="fieldcontain">
-				<label for="bm-url" class="ui-input-text">URL:</label>
+				<label for="bm-patient" class="ui-input-text">Patient:</label>
 				<input type="text" name="bm-url" class="ui-input-text" />
 			</div>
-			<div class="ui-grid-a bm-edit-grid">
-				<div class="ui-block-a">
-					<button data-icon="check" data-inline="true" data-theme="b">OK</button>
-				</div>
-				<div class="ui-block-b">
-					<button data-icon="delete" data-inline="true">Cancel</button>
-				</div>
+			<div data-role="fieldcontain">
+				<label for="bm-mrn" class="ui-input-text">MRN:</label>
+				<input type="text" id="bm-mrn" name="bm-mrn" class="ui-input-text" />
+			</div>
+			<div data-role="fieldcontain">
+				<label for="bm-acc" class="ui-input-text">ACC:</label>
+				<input type="text" id="bm-acc" name="bm-acc" class="ui-input-text" />
+			</div>
+			<div class="center-text">
+				<a href="#" data-role="button" data-icon="check" data-inline="true"
+					data-theme="b">Submit</a>
+				<a href="#" data-role="button" data-icon="delete" data-rel="back"
+					data-inline="true">Cancel</a>
 			</div>
 		</div>
 	</div>
 	
+	
 	<!-- Applications page -->
 	<div data-role="page" id="apps">
+	
+		<!-- Applications header -->
+		<div data-role="header">
+			<a href="#home" data-icon="home">Home</a>
+			<h1>Shift</h1>
+		</div>
+		
 		<!-- Applications content -->
 		<div data-role="panel" id="url" data-position="right" data-theme="c" data-display="push">
 			<!-- panel content goes here -->
@@ -145,14 +171,14 @@
 		</div>
 	</div>
 
+
 	<!-- Barcode scanning page -->
 	<div data-role="page" id="scan">
 	
 		<!-- Header -->
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
-			<a href="#bookmarks-page" data-rel="dialog">Bookmarks</a>
+			<a href="#home" data-icon="home">Home</a>
 			<h1>Shift</h1>
-			<a href="#unimpl" data-rel="popup">Applications</a>
 		</div>
 		
 		<!-- Content -->
@@ -169,6 +195,22 @@
 					<img src="img/barcode.png">
 				</div>
 			</div>
+		</div>
+		
+	</div>
+	
+	
+	<!-- Scan Results page -->
+	<div data-role="page" id="scan-results">
+		
+		<!-- Scan Results header -->
+		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
+			<a href="#home" data-icon="home">Home</a>
+			<h1>Shift</h1>
+		</div>
+		
+		<!-- Scan Results content -->
+		<div data-role="content">
 			<div id="scan-form">
 				<div data-role="fieldcontain">
 					<label for="scan-app" class="ui-input-text">App:</label>
@@ -188,28 +230,13 @@
 					<input type="text" id="scan-acc" name="scan-acc" class="ui-input-text" />
 				</div>
 				<div class="center-text">
-					<a href="#page" id="launch" data-role="button" data-theme="b"
+					<a href="#" data-role="button" data-theme="b"
 						data-inline="true">Launch App</a>
-					<a href="#page" id="bookmarks" data-role="button" data-theme="b"
+					<a href="#" data-role="button" data-theme="b"
 						data-inline="true">Bookmark</a>
 				</div>
 			</div>
 		</div>
-
-		<!-- Footer -->
-		<div data-role="footer" data-id="foot" data-position="fixed" class="nav-glyphish-example">
-			<div data-role="navbar" class="nav-glyphish-example">
-				<ul>
-					<li><a href="#unimpl" class="scan-btn ui-btn-active ui-state-persist"
-						data-theme="b" data-icon="custom" data-rel="popup"></a></li>
-					<li><a href="#ocr-options" class="ocr-btn" data-theme="b"
-						data-icon="custom"></a></li>
-					<li><a href="#unimpl" class="voice-btn" data-theme="b" data-icon="custom"
-						data-rel="popup"></a></li>
-				</ul>
-			</div>
-		</div>
-		
 	</div>
 	
 
@@ -218,9 +245,8 @@
 	
 		<!-- Header -->
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
-			<a href="#unimpl" data-rel="popup">Bookmarks</a>
+			<a href="#home" data-icon="home">Home</a>
 			<h1>Shift</h1>
-			<a href="#unimpl" data-rel="popup">Applications</a>
 		</div>
 		
 		<!-- Content -->
@@ -237,23 +263,7 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- Footer -->
-		<div data-role="footer" data-id="foot" data-position="fixed" class="nav-glyphish-example">
-			<div data-role="navbar" class="nav-glyphish-example">
-				<ul>
-					<li><a href="#unimpl" class="scan-btn" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
-					<li><a href="#ocr-options" class="ocr-btn ui-btn-active ui-state-persist" data-theme="b"
-						data-icon="custom"></a></li>
-					<li><a href="#unimpl" class="voice-btn" data-theme="b" data-icon="custom" data-rel="popup"></a></li>
-				</ul>
-			</div>
-		</div>
-
-		<!-- Out of order popup -->
-		<div data-role="popup" id="unimpl">
-			<p>Feature coming soon</p>
-		</div>
+		
 	</div>
 
 	<!-- OCR page -->
@@ -280,8 +290,8 @@
 			<!-- Canvas -->
 			<div id="ocr-draw-wrap"><div>
 				<div id="ocr-canvas-container">
-					<canvas id="draw-canvas" width="100px" height="100px"></canvas>
-					<canvas id="photo-canvas" width="100px" height="100px"></canvas>
+					<canvas id="draw-canvas"></canvas>
+					<canvas id="photo-canvas"></canvas>
 				</div>
 			</div></div>
 		</div>
