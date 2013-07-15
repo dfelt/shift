@@ -67,7 +67,7 @@
 					</a>
 				</div>
 				<div class="ui-block-b">
-					<a href="#apps">
+					<a href="#app">
 						<img src="img/briefcase.png"><br>
 						Applications
 					</a>
@@ -144,7 +144,7 @@
 	
 	
 	<!-- Applications page -->
-	<div data-role="page" id="apps">
+	<div data-role="page" id="app">
 	
 		<!-- Applications header -->
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
@@ -153,16 +153,16 @@
 		</div>
 		
 		<!-- Applications content -->
-		<div data-role="content" id="url" data-position="right" data-theme="c" data-display="push">
-			<ul data-role="listview" data-inset="true" data-filter="true">
+		<div data-role="content">
+			<ul data-role="listview" id="app-list" data-inset="true" data-filter="true">
 				<li data-role="list-divider">Public Applications</li>
-				<li><a href="#url" data-rel="close" onclick="switchApp('PubMed');">PubMed</a></li>
-				<li><a href="#url" data-rel="close" onclick="switchApp('foo');">foo</a></li>
+				<li><a href="#url">PubMed</a></li>
+				<li><a href="#url">foo</a></li>
 				<li data-role="list-divider">My Applications</li>
-				<li id="bar"><a id="bar" href="#url" data-rel="close">bar</a><a href="#urlHandler"
+				<li><a id="bar" href="#url" data-rel="close">bar</a><a href="#urlHandler"
 					data-rel="popup" id="bar" onclick="urlHandlerHelper(id);" data-position-to="window"
 					data-transition="pop"></a></li>
-				<li id="baz"><a id="baz" href="#url" data-rel="close">baz</a><a href="#urlHandler"
+				<li><a id="baz" href="#url" data-rel="close">baz</a><a href="#urlHandler"
 					data-rel="popup" id="baz" onclick="urlHandlerHelper(id);" data-position-to="window"
 					data-transition="pop"></a></li>
 			</ul>
@@ -238,9 +238,8 @@
 					<input type="text" id="scan-acc" name="scan-acc" class="ui-input-text" />
 				</div>
 				<div class="center-text">
-					<a href="#" data-role="button" data-theme="b"
-						data-inline="true">Launch App</a>
-					<a href="#" data-role="button" data-theme="b"
+					<a href="#" data-role="button" data-theme="b" data-inline="true">Launch App</a>
+					<a href="#" id="scan-bookmark-btn" data-role="button" data-theme="b"
 						data-inline="true">Bookmark</a>
 				</div>
 			</div>
