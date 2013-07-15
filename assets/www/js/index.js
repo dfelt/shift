@@ -1,10 +1,13 @@
 
 $(document).on('deviceready', function() {
+    var bookmarks =  new BookmarkCollection();
     // Initialize views
     new ScanView();
     new ScanResultsView();
     new OcrOptionsView();
     new OcrView();
+    new BookmarksPageView({ collection: bookmarks });
+    new BookmarkEditView();
 });
 
 /**
