@@ -1,13 +1,14 @@
 
 $(document).on('deviceready', function() {
-    var bookmarks =  new BookmarkCollection();
-    // Initialize views
+    // Views attach listeners on initialization
     new ScanView();
     new ScanResultsView();
     new OcrOptionsView();
     new OcrView();
-    new BookmarksPageView({ collection: bookmarks });
+    new BookmarksPageView({ collection: new BookmarkCollection() });
     new BookmarkEditView();
+    new AppPageView({ collection: new AppCollection() });
+    new AppEditView();
 });
 
 /**

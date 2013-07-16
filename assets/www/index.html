@@ -23,10 +23,14 @@
 	<script src="js/lib/backbone.localStorage-min.js"></script>
 	<!-- Backbone models -->
 	<script src="js/model/Bookmark.js"></script>
+	<script src="js/model/App.js"></script>
 	<!-- Backbone views -->
 	<script src="js/view/BookmarkView.js"></script>
 	<script src="js/view/BookmarksPageView.js"></script>
 	<script src="js/view/BookmarkEditView.js"></script>
+	<script src="js/view/AppView.js"></script>
+	<script src="js/view/AppPageView.js"></script>
+	<script src="js/view/AppEditView.js"></script>
 	<script src="js/view/ScanView.js"></script>
 	<script src="js/view/ScanResultsView.js"></script>
 	<script src="js/view/OcrOptionsView.js"></script>
@@ -84,7 +88,7 @@
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
 			<a href="#home" data-icon="home">Home</a>
 			<h1>Bookmarks</h1>
-			<a href="#bm-edit" id="bm-new-btn" data-rel="dialog" data-icon="plus" class="ui-btn-right">New</a>
+			<a href="#bm-edit" id="bm-new-btn" data-rel="dialog" data-icon="plus">New</a>
 		</div>
 		
 		<!-- Bookmarks content -->
@@ -101,9 +105,11 @@
 				<li data-role="divider" data-theme="e">Choose an action</li>
 				<li><a href="#bm-edit" id="bm-edit-btn" data-rel="dialog">Edit</a>
 				<li><a href="#" id="bm-remove-btn" data-rel="back">Delete</a></li>
-				<li><a href="#" id="bm-share-btn" data-rel="back">Share</a></li>
+				<li><a href="#unimpl" id="bm-share-btn" data-rel="popup">Share</a></li>
 			</ul>
 		</div>
+		
+		<div data-role="popup" id="unimpl">Feature coming soon</div>
 	</div>
 	
 	
@@ -149,33 +155,53 @@
 		<!-- Applications header -->
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
 			<a href="#home" data-icon="home">Home</a>
-			<h1>Shift</h1>
+			<h1>Applications</h1>
+			<a href="#app-edit" id="app-new-btn" data-rel="dialog" data-icon="plus">New</a>
 		</div>
 		
 		<!-- Applications content -->
 		<div data-role="content">
 			<ul data-role="listview" id="app-list" data-inset="true" data-filter="true">
 				<li data-role="list-divider">Public Applications</li>
-				<li><a href="#url">PubMed</a></li>
-				<li><a href="#url">foo</a></li>
+				<li><a href="#unimpl" data-rel="popup">PubMed</a></li>
 				<li data-role="list-divider">My Applications</li>
-				<li><a id="bar" href="#url" data-rel="close">bar</a><a href="#urlHandler"
-					data-rel="popup" id="bar" onclick="urlHandlerHelper(id);" data-position-to="window"
-					data-transition="pop"></a></li>
-				<li><a id="baz" href="#url" data-rel="close">baz</a><a href="#urlHandler"
-					data-rel="popup" id="baz" onclick="urlHandlerHelper(id);" data-position-to="window"
-					data-transition="pop"></a></li>
 			</ul>
 		</div>
 		
 		<!-- Applications Options popup -->
-		<div data-role="popup" id="urlHandler" data-theme="b">
-			<ul data-role="listview" data-inset="true" style="min-width: 210px;" data-theme="b"
-				data-overlay-theme="a">
+		<div data-role="popup" id="app-options" data-theme="b">
+			<ul data-role="listview" data-inset="true" data-theme="b">
 				<li data-role="divider" data-theme="e">Choose an action</li>
-				<li><a href="#page" data-rel="back">Share</a></li>
-				<li><a href="#page" data-rel="back" onclick="deleteUrl();">Delete</a></li>
+				<li><a href="#app-edit" id="app-edit-btn" data-rel="dialog">Edit</a></li>
+				<li><a href="#" id="app-remove-btn" data-rel="back">Delete</a></li>
+				<li><a href="#unimpl" data-rel="popup">Share</a></li>
 			</ul>
+		</div>
+		
+		<div data-role="popup" id="unimpl">Feature coming soon</div>
+	</div>
+	
+	
+	<!-- Applications Edit page -->
+	<div data-role="page" id="app-edit">
+	
+		<!-- Applications Edit header -->
+		<div data-role="header">
+			<h1>App Editor</h1>
+		</div>
+		
+		<!-- Applications Edit content -->
+		<div data-role="content">
+			<div data-role="fieldcontain">
+				<label for="app-name" class="ui-input-text">Name:</label>
+				<input type="text" id="app-name" name="app-name" class="ui-input-text" />
+			</div>
+			<div class="center-text">
+				<a href="#" id="app-submit" data-role="button" data-icon="check" data-rel="back"
+					data-inline="true" data-theme="b">Submit</a>
+				<a href="#" id="app-cancel" data-role="button" data-icon="delete" data-rel="back"
+					data-inline="true">Cancel</a>
+			</div>
 		</div>
 	</div>
 
@@ -238,12 +264,14 @@
 					<input type="text" id="scan-acc" name="scan-acc" class="ui-input-text" />
 				</div>
 				<div class="center-text">
-					<a href="#" data-role="button" data-theme="b" data-inline="true">Launch App</a>
+					<a href="#unimpl" data-rel="popup" data-role="button" data-theme="b" data-inline="true">Launch App</a>
 					<a href="#" id="scan-bookmark-btn" data-role="button" data-theme="b"
 						data-inline="true">Bookmark</a>
 				</div>
 			</div>
 		</div>
+			
+		<div data-role="popup" id="unimpl">Feature coming soon</div>
 	</div>
 	
 
@@ -303,5 +331,16 @@
 			</div></div>
 		</div>
 	</div>
+	
+	
+	<!-- Templates -->
+	<script id="bm-tpl" type="x-underscore-template">
+		<a href="#unimpl" data-rel="popup" class="bm-list-btn"><%= app %></a>
+		<a href="#app-options" data-rel="popup" class="bm-options-btn">
+	</script>
+	<script id="app-tpl" type="x-underscore-template">
+		<a href="#unimpl" data-rel="popup" class="app-list-btn"><%= name %></a>
+		<a href="#app-options" data-rel="popup" class="app-options-btn">
+	</script>
 </body>
 </html>
