@@ -11,7 +11,6 @@ window.AppView = Backbone.View.extend({
     
     render: function() {
         this.$el.html(this.template({ name: this.model.get('name') }));
-        console.log('render', this.model);
         return this;
     },
     

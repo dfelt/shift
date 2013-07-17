@@ -22,10 +22,7 @@ window.AppEditView = Backbone.View.extend({
     
     submit: function() {
         _.each(this.fields, function(field, key) {
-            console.log('each', {field: field, key: key});
             this.model.set(key, field.val());
         }, this);
-        console.log('submit', this.model);
-        //this.model.save();
     }
 });
