@@ -1,4 +1,4 @@
-window.ScanView = Backbone.View.extend({
+window.ScanPageView = Backbone.View.extend({
     el: '#scan',
     
     events: {

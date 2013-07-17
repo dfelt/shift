@@ -1,5 +1,5 @@
 
-window.OcrView = Backbone.View.extend({
+window.OcrPageView = Backbone.View.extend({
     
     events: {
         'pageshow'                    : 'render',

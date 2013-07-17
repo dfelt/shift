@@ -1,18 +1,18 @@
 
 $(document).on('deviceready', function() {
+    // Create and fetch collections
     var bookmarks = new BookmarkCollection();
     var apps = new AppCollection();
-    
     _.defer(function() {
         bookmarks.fetch();
         apps.fetch();
     });
     
-    // Views attach listeners on initialization
-    new ScanView();
+    // Create views, which attach listeners on initialization
+    new ScanPageView();
     new ScanResultsView({ apps: apps });
     new OcrOptionsView();
-    new OcrView();
+    new OcrPageView();
     new BookmarksPageView({ collection: bookmarks });
     new BookmarkEditView();
     new AppPageView({ collection: apps });
