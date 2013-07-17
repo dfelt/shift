@@ -61,10 +61,6 @@ public class Ocr extends CordovaPlugin {
     private static final int BYTES_PER_PIXEL = 4;
     private static final int BITMAP_MEM_LIMIT = 5000000;
     
-    String action;
-    JSONArray args;
-    CallbackContext callbackContext;
-    
 	TessBaseAPI tess;
 	ResultIterator resultIterator;
 	Bitmap image;
@@ -76,22 +72,19 @@ public class Ocr extends CordovaPlugin {
 	}
 	
 	@Override
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
+	public boolean execute(final String action, final JSONArray args,
+			final CallbackContext callbackContext) {
 		if (!ACTIONS.contains(action)) {
 			return false;
 		}
 		
-		this.action = action;
-		this.args = args;
-		this.callbackContext = callbackContext;
-		
 		cordova.getThreadPool().execute(new Runnable() {
 			public void run() {
 				try {
-					executeAsync();
+					executeAsync(action, args, callbackContext);
 				} catch (Exception e) {
 					e.printStackTrace();
-					Ocr.this.callbackContext.error(e.toString());
+					callbackContext.error(e.toString());
 				}
 			}
 		});
@@ -99,7 +92,8 @@ public class Ocr extends CordovaPlugin {
 		return true;
 	}
 	
-	public void executeAsync() throws JSONException, FileNotFoundException, IOException {
+	public void executeAsync(String action, JSONArray args, CallbackContext callbackContext)
+			throws JSONException, FileNotFoundException, IOException {
 		Log.d(TAG, "Executing action: " + action);
 		
 		if (INIT.equals(action)) {
