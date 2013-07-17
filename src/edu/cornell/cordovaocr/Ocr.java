@@ -92,7 +92,8 @@ public class Ocr extends CordovaPlugin {
 		return true;
 	}
 	
-	public void executeAsync(String action, JSONArray args, CallbackContext callbackContext)
+	public synchronized void executeAsync(String action, JSONArray args,
+			CallbackContext callbackContext)
 			throws JSONException, FileNotFoundException, IOException {
 		Log.d(TAG, "Executing action: " + action);
 		
