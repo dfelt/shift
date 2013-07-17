@@ -24,7 +24,9 @@ window.AppPageView = Backbone.View.extend({
     
     // Debounce listview refresh so ui updates are grouped
     refresh: _.debounce(function() {
-        this.$appList.listview('refresh');
+        if (this.$appList.hasClass('ui-listview')) {
+            this.$appList.listview('refresh');
+        }
     }, 100),
     
     showApp: function(app) {

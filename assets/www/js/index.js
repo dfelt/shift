@@ -1,13 +1,15 @@
 
 $(document).on('deviceready', function() {
+    var apps = new AppCollection();
+    
     // Views attach listeners on initialization
     new ScanView();
-    new ScanResultsView();
+    new ScanResultsView({ apps: apps });
     new OcrOptionsView();
     new OcrView();
     new BookmarksPageView({ collection: new BookmarkCollection() });
     new BookmarkEditView();
-    new AppPageView({ collection: new AppCollection() });
+    new AppPageView({ collection: apps });
     new AppEditView();
 });
 

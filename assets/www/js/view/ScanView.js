@@ -1,20 +1,18 @@
 window.ScanView = Backbone.View.extend({
+    el: '#scan',
     
     events: {
         'vclick #scan-begin-btn' : 'scanCode'
     },
     
-    initialize: function() {
-        this.setElement($('#scan'));
-    },
-    
     // Scan QR code and extract data
     scanCode: function() {
-        var fields = this.fields;
         window.plugins.barcodeScanner.scan(function(scan) {
             console.log('scan result: ' + JSON.stringify(scan));
-            $('#scan-results').data('results', scan);
-            $.mobile.changePage('#scan-results');
+            if (!scan.cancelled) {
+                $('#scan-results').data('results', scan.text);
+                $.mobile.changePage('#scan-results');
+            }
        }, window.alert);
     }
 });

@@ -248,7 +248,7 @@
 			<div id="scan-form">
 				<div data-role="fieldcontain">
 					<label for="scan-app" class="ui-input-text">App:</label>
-					<input type="text" id="scan-app" name="scan-app" class="ui-input-text" />
+					<select id="scan-app" name="scan-app" class="ui-input-text"></select>
 				</div>
 				<div data-role="fieldcontain">
 					<label for="scan-patient" class="ui-input-text">Patient:</label>
@@ -336,7 +336,7 @@
 	<!-- Templates -->
 	<script id="bm-tpl" type="x-underscore-template">
 		<a href="#unimpl" data-rel="popup" class="bm-list-btn"><%= app %></a>
-		<a href="#app-options" data-rel="popup" class="bm-options-btn">
+		<a href="#bm-options" data-rel="popup" class="bm-options-btn">
 	</script>
 	<script id="app-tpl" type="x-underscore-template">
 		<a href="#unimpl" data-rel="popup" class="app-list-btn"><%= name %></a>

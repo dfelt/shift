@@ -5,9 +5,8 @@ window.BookmarkView = Backbone.View.extend({
         'vclick .bm-options-btn' : 'setOptionsModel'
     },
     
-    template: _.template('<a href="#" class="bm-list-btn"><%= app %></a><a href="#bm-options" class="bm-options-btn" data-rel="popup">'),
-    
     initialize: function() {
+        this.template = _.template($('#bm-tpl').html());
         this.listenTo(this.model, 'change', this.modify);
         this.listenTo(this.model, 'destroy', this.remove);
     },
