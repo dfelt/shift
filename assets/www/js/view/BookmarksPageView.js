@@ -15,20 +15,11 @@ window.BookmarksPageView = Backbone.View.extend({
         
         this.listenTo(this.collection, 'add', this.showBookmark);
         this.listenTo(this.collection, 'reset', this.reset);
-        this.listenTo(this.collection, 'change', this.refresh);
+        this.listenTo(this.collection, 'change', this.render);
     },
-    
-    render: function() {
-        this.populate();
-        this.refresh();
-    },
-    
-    populate: _.once(function() {
-        this.collection.fetch();
-    }),
-    
+
     // Debounce listview refresh so ui updates are grouped
-    refresh: _.debounce(function() {
+    render: _.debounce(function() {
         if (this.$bookmarkList.hasClass('ui-listview')) {
             this.$bookmarkList.listview('refresh');
         }
@@ -37,7 +28,7 @@ window.BookmarksPageView = Backbone.View.extend({
     showBookmark: function(bookmark) {
         var view = new BookmarkView({ model: bookmark });
         this.$bookmarkList.append(view.render().el);
-        this.refresh();
+        this.render();
     },
     
     addNew: function() {
@@ -66,6 +57,6 @@ window.BookmarksPageView = Backbone.View.extend({
     
     remove: function() {
         this.$options.data('bookmark').destroy();
-        this.refresh();
+        this.render();
     }
 });

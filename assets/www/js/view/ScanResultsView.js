@@ -4,7 +4,6 @@ window.ScanResultsView = Backbone.View.extend({
     events: {
         'pagebeforeshow' : 'render',
         'change input,select' : 'update',
-        'touchstart #scan-app' : 'renderApps',
         'vclick #scan-launch-btn' : 'launchApp',
         'vclick #scan-bookmark-btn' : 'bookmark'
     },
@@ -28,18 +27,38 @@ window.ScanResultsView = Backbone.View.extend({
             field.val(model.get(key));
         });
         
-        this.apps.fetch();
-        this.fields.app.empty();
-        this.apps.each(function(app) {
-            this.fields.app.append('<option>' + app.get('name') + '</option>');
-        }, this);
+        this.renderApps();
     },
     
     renderApps: function() {
+        var select = this.fields.app;
+        var selectedIndex = select.attr('selectedIndex') || 0;
+        select.empty();
+        this.apps.each(function(app) {
+            select.append('<option>' + app.get('name') + '</option>');
+        }, this);
+        select.append('<option>New...</option>');
+        select.children().eq(selectedIndex).attr('selected', true);
+        select.selectmenu('refresh');
+        
+        var self = this;
+        select.on('change', function() {
+            if (select.val() === 'New...') {
+                var model = new App();
+                self.listenTo(model, 'change', function() {
+                    self.apps.add(model);
+                    model.save();
+                    // Select the newly added option
+                    select.children().eq(-2).attr('selected', true);
+                    self.renderApps();
+                });
+                $('#app-edit').data('app', model);
+                $.mobile.changePage('#app-edit', {role: 'dialog'});
+            }
+        });
     },
     
     update: function(evt) {
-        console.log('update');
         var field = $(evt.target);
         var key = field.attr('id').replace('scan-', '');
         this.model.set(key, field.val());

@@ -15,15 +15,11 @@ window.AppPageView = Backbone.View.extend({
         
         this.listenTo(this.collection, 'add', this.showApp);
         this.listenTo(this.collection, 'reset', this.reset);
-        this.listenTo(this.collection, 'change', this.refresh);
+        this.listenTo(this.collection, 'change', this.render);
     },
-    
-    render: _.once(function() {
-        this.collection.fetch();
-    }),
-    
+
     // Debounce listview refresh so ui updates are grouped
-    refresh: _.debounce(function() {
+    render: _.debounce(function() {
         if (this.$appList.hasClass('ui-listview')) {
             this.$appList.listview('refresh');
         }
@@ -32,7 +28,7 @@ window.AppPageView = Backbone.View.extend({
     showApp: function(app) {
         var view = new AppView({ model: app });
         this.$appList.append(view.render().el);
-        this.refresh();
+        this.render();
     },
     
     reset: function() {
@@ -55,7 +51,7 @@ window.AppPageView = Backbone.View.extend({
     
     remove: function() {
         this.selected.destroy();
-        this.refresh();
+        this.render();
     },
     
     select: function(evt) {
