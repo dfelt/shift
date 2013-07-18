@@ -8,7 +8,7 @@ window.OcrPageView = Backbone.View.extend({
         'touchstart  #draw-canvas'    : 'startDraw',
         'touchmove   #draw-canvas'    : 'moveDraw',
         'touchend    #draw-canvas'    : 'endDraw',
-        'vclick      #ocr-text-delete': 'clearText',
+        'vclick      .ui-input-clear' : 'clearText',
         'vclick      #ocr-text-accept': 'submit'
     },
     
@@ -50,10 +50,11 @@ window.OcrPageView = Backbone.View.extend({
         // Workaround for: code.google.com/p/android/issues/detail?id=35474
         $(this.photoCanvas).parents().css('overflow', 'visible');
         
-        _.bindAll(this, 'repaint', 'onOcrInit', 'onOcrSetImage', 'onOcrGetWords',
-                'onOcrGetUTF8Text', 'onOcrGetWords2', 'onOcrGetResults', 'alertError');
+        _.bindAll(this, 'repaint', 'ocrSetWhiteList', 'ocrInit', 'ocrSetImage',
+                'ocrGetWords', 'ocrGetText', 'ocrGetWords2', 'ocrGetResults',
+                'ocrSetResults', 'alertError');
         
-        this.initOcr(this.defaultLanguage, function(){});
+        this.ocrInit(this.defaultLanguage, function(){});
     },
     
     render: function(e) {
@@ -65,14 +66,22 @@ window.OcrPageView = Backbone.View.extend({
         this.ocrTextbox.val('');
         
         // Get page data
-        this.isService = $.data(this.el, 'service');
-        this.photo.src = $.data(this.el, 'photoUri');
+        this.isService = this.$el.data('service');
+        this.photo.src = this.$el.data('photoUri');
+        this.app = this.$el.data('app');
         
-        this.initOcr(this.$el.data('lang'), this.onOcrInit());
+        if (this.app === 'PubMed Article') {
+            this.whiteList = '0123456789';
+            this.ocrInit('eng', this.ocrSetWhiteList);
+        } else {
+            var init = _.partial(this.ocrInit, this.$el.data('lang'), this.ocrSetImage, true);
+            this.ocr.end(init, this.alertError);
+        }
         
         // We need to wait for the photo to load before we can work with it
         var self = this;
         $(this.photo).one('load', function() {
+            console.log('onload: ' + self.photo.naturalWidth + ' ' + self.photo.naturalHeight);
             // For some reason, only on the first render this bug appears:
             // code.google.com/p/android/issues/detail?id=35474
             // This seems to fix the problem
@@ -87,16 +96,6 @@ window.OcrPageView = Backbone.View.extend({
         });
         
         return this;
-    },
-    
-    initOcr: function(lang, onSuccess) {
-        lang = lang || this.initLanguage || this.defaultLanguage;
-        if (lang !== this.initLanguage) {
-            this.initLanguage = lang;
-            this.ocr.init(onSuccess, this.alertError, this.initLanguage);
-        } else {
-            _.defer(onSuccess);
-        }
     },
     
     onHide: function() {
@@ -144,18 +143,33 @@ window.OcrPageView = Backbone.View.extend({
         _.each(this.currentTouchPaths, this.clearPath, this);
     },
     
+    ocrInit: function(lang, onSuccess, force) {
+        lang = lang || this.initLanguage || this.defaultLanguage;
+        if (force || lang !== this.initLanguage) {
+            this.initLanguage = lang;
+            this.ocr.init(onSuccess, this.alertError, this.initLanguage);
+        } else {
+            _.defer(onSuccess);
+        }
+    },
+    
+    ocrSetWhiteList: function() {
+        this.ocr.setVariable(this.ocrSetImage, this.alertError,
+                this.ocr.VAR_CHAR_WHITELIST, this.whiteList);
+    },
+    
     // After OCR init finishes, set the image
-    onOcrInit: function() {
-        this.ocr.setImage(this.onOcrSetImage, this.alertError, this.photo.src);
+    ocrSetImage: function() {
+        this.ocr.setImage(this.ocrGetWords, this.alertError, this.photo.src);
     },
     
     // After OCR setImage finishes, get word boxes
-    onOcrSetImage: function() {
-        this.ocr.getWords(this.onOcrGetWords, this.alertError);
+    ocrGetWords: function() {
+        this.ocr.getWords(this.ocrGetText, this.alertError);
     },
     
     // After we get word boxes, highlight them on the canvas, and begin recognition
-    onOcrGetWords: function(words) {
+    ocrGetText: function(words) {
         for (var i = 0; i < words.length; i++) {
             words[i].selected = false;
             words[i].index = i;
@@ -172,24 +186,24 @@ window.OcrPageView = Backbone.View.extend({
         });
         
         // We need to force recognition before we can get individual word text
-        this.ocr.getUTF8Text(this.onOcrGetUTF8Text, this.alertError);
+        this.ocr.getUTF8Text(this.ocrGetWords2, this.alertError);
     },
     
     // After recognition is finished, get the word boxes again, as they may
     // have changed
-    onOcrGetUTF8Text: function() {
-        this.ocr.getWords(this.onOcrGetWords2, this.alertError);
+    ocrGetWords2: function() {
+        this.ocr.getWords(this.ocrGetResults, this.alertError);
     },
     
     // After getting the updated word boxes, we get the actual word text
-    onOcrGetWords2: function(words) {
+    ocrGetResults: function(words) {
         this.tempWordBoxes = words;
-        this.ocr.getResults(this.onOcrGetResults, this.alertError,
+        this.ocr.getResults(this.ocrSetResults, this.alertError,
                 this.ocr.PageIteratorLevel.RIL_WORD);
     },
     
     // After we get the word texts, highlight them in the picture
-    onOcrGetResults: function(words) {
+    ocrSetResults: function(words) {
         // Join together word texts and word boxes
         for (var i = 0; i < words.length; i++) {
             _.extend(words[i], this.tempWordBoxes[i]);
@@ -253,22 +267,23 @@ window.OcrPageView = Backbone.View.extend({
         this.repaint();
     },
     
-    getText: function() {
-        return _.pluck(this.selectedWords, 'text').join(' ');
-    },
-    
     updateTextbox: _.debounce(function() {
-        this.ocrTextbox.val(this.getText());
+        var text = _.pluck(this.selectedWords, 'text').join(' ');
+        this.ocrTextbox.val(text);
     }, 250),
     
     submit: function() {
+        var text = this.ocrTextbox.val();
         if (this.isService) {
             window.location.href = 'app://ocr?' + $.param({
                 success: true,
-                message: this.getText()
+                message: text
             });
         } else {
-            //TODO: what do we do with this data?
+            if (this.app === 'PubMed Article') {
+                var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + text.trim();
+                window.open(url, '_blank');
+            }
         }
     },
     

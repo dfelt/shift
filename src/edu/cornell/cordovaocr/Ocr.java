@@ -38,6 +38,7 @@ public class Ocr extends CordovaPlugin {
     private static final String INIT                         = "init";
     private static final String GET_INIT_LANGUAGES_AS_STRING = "getInitLanguagesAsString";
     private static final String CLEAR                        = "clear";
+    private static final String END                          = "end";
     private static final String SET_VARIABLE                 = "setVariable";
     private static final String SET_PAGE_SEG_MODE            = "setPageSegMode";
     private static final String SET_RECTANGLE                = "setRectangle";
@@ -53,9 +54,9 @@ public class Ocr extends CordovaPlugin {
     private static final String GET_RESULTS                  = "getResults";
     
     private static final List<String> ACTIONS = Arrays.asList(
-    	INIT, GET_INIT_LANGUAGES_AS_STRING, CLEAR, SET_VARIABLE, SET_PAGE_SEG_MODE, SET_RECTANGLE,
-    	SET_IMAGE, GET_UTF8_TEXT, MEAN_CONFIDENCE, WORD_CONFIDENCES, GET_REGIONS, GET_TEXTLINES,
-    	GET_STRIPS, GET_WORDS, GET_CHARACTERS, GET_RESULTS
+    	INIT, GET_INIT_LANGUAGES_AS_STRING, CLEAR, END, SET_VARIABLE, SET_PAGE_SEG_MODE,
+    	SET_RECTANGLE, SET_IMAGE, GET_UTF8_TEXT, MEAN_CONFIDENCE, WORD_CONFIDENCES, GET_REGIONS,
+    	GET_TEXTLINES, GET_STRIPS, GET_WORDS, GET_CHARACTERS, GET_RESULTS
     );
     
     private static final int BYTES_PER_PIXEL = 4;
@@ -106,6 +107,10 @@ public class Ocr extends CordovaPlugin {
 		}
 		else if (CLEAR.equals(action)) {
 			tess.clear();
+			callbackContext.success();
+		}
+		else if (END.equals(action)) {
+			tess.end();
 			callbackContext.success();
 		}
 		else if (SET_VARIABLE.equals(action)) {

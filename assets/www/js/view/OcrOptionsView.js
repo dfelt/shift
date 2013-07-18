@@ -3,8 +3,7 @@ window.OcrOptionsView = Backbone.View.extend({
     
     events: {
         'pagebeforeshow'            : 'readParams',
-        'tap #ocr-camera-btn'       : 'getCameraPicture',
-        'tap #photo-library-button' : 'getLibraryPicture'
+        'vclick #ocr-camera-btn'    : 'getPhoto'
     },
     
     isService: false,
@@ -22,32 +21,24 @@ window.OcrOptionsView = Backbone.View.extend({
             this.getCameraPicture();
         }
     },
-
-    getCameraPicture: function() {
-        this.getPhoto(navigator.camera.PictureSourceType.CAMERA);
-    },
-
-    getLibraryPicture: function() {
-        this.getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY);
-    },
     
     // We debounce because of android double-tap bug
-    getPhoto: _.debounce(function(pictureSource) {
+    getPhoto: function() {
         console.log('getPhoto');
         var self = this;
         var gotoOcrPage = function(photoUri) {
-            $('#ocr-camera-btn').button('enable');
-            $.mobile.loading('hide');
+            self.setCameraButtonEnabled(true);
             
-            var page = $('#ocr')[0];
-            $.data(page, 'photoUri', photoUri);
-            $.data(page, 'service', false);
-            $.data(page, 'lang', self.lang);
-            $.mobile.changePage($(page));
+            $('#ocr').data({
+                photoUri: photoUri,
+                service: false,
+                lang: self.lang,
+                app: $('#ocr-app').val()
+            });
+            $.mobile.changePage('#ocr');
         };
         var alertError = function(message) {
-            $('#ocr-camera-btn').button('enable');
-            $.mobile.loading('hide');
+            self.setCameraButtonEnabled(true);
             
             if (self.isService) {
                 window.location.href = 'app://ocr?' + $.param({
@@ -55,19 +46,35 @@ window.OcrOptionsView = Backbone.View.extend({
                     message: message
                 });
             } else if (!(/cancel/i).test(message)){
+                // Only alert if message doesn't contain "cancel", which
+                // probably means the user cancelled the camera picture
                 window.alert(message);
             }
         };
         var size = Math.max($(window).width(), $(window).height());
+        console.log('size: ' + size);
         var opts = {
-                sourceType:      pictureSource,
+                sourceType:      navigator.camera.PictureSourceType.CAMERA,
                 destinationType: navigator.camera.DestinationType.FILE_URI,
                 targetWidth:     size,
                 targetHeight:    size
         };
         
-        $('#ocr-camera-btn').button('disable');
-        $.mobile.loading('show');
-        navigator.camera.getPicture(gotoOcrPage, alertError, opts);
-    }, 1000)
+        this.setCameraButtonEnabled(false);
+        
+        // Delay camera to allow page to render and show loading symbol
+        _.delay(function() {
+            navigator.camera.getPicture(gotoOcrPage, alertError, opts);
+        }, 100);
+    },
+    
+    setCameraButtonEnabled: function(enable) {
+        if (enable) {
+            $('#ocr-camera-btn').button('enable');
+            $.mobile.loading('hide');
+        } else {
+            $('#ocr-camera-btn').button('disable');
+            $.mobile.loading('show');
+        }
+    }
 });

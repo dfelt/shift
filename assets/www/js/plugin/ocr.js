@@ -45,6 +45,7 @@ cordova.define('cordova/plugin/ocr', function(require, exports, module) {
         init                     : act('init'),
         getInitLanguagesAsString : act('getInitLanguagesAsString'),
         clear                    : act('clear'),
+        end                      : act('end'),
         setVariable              : act('setVariable'),
         setPageSegMode           : act('setPageSegMode'),
         setRectangle             : act('setRectangle'),

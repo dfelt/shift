@@ -156,55 +156,20 @@
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
 			<a href="#home" data-icon="home">Home</a>
 			<h1>Applications</h1>
-			<a href="#app-edit" id="app-new-btn" data-rel="dialog" data-icon="plus">New</a>
 		</div>
 		
 		<!-- Applications content -->
 		<div data-role="content">
 			<ul data-role="listview" id="app-list" data-inset="true" data-filter="true">
-				<li data-role="list-divider">Public Applications</li>
-				<li><a href="#unimpl" data-rel="popup">PubMed</a></li>
-				<li data-role="list-divider">My Applications</li>
-			</ul>
-		</div>
-		
-		<!-- Applications Options popup -->
-		<div data-role="popup" id="app-options" data-theme="b">
-			<ul data-role="listview" data-inset="true" data-theme="b">
-				<li data-role="divider" data-theme="e">Choose an action</li>
-				<li><a href="#app-edit" id="app-edit-btn" data-rel="dialog">Edit</a></li>
-				<li><a href="#" id="app-remove-btn" data-rel="back">Delete</a></li>
-				<li><a href="#unimpl" data-rel="popup">Share</a></li>
+				<li data-role="list-divider">Text Recognition Applications</li>
+				<li><a href="#unimpl" data-rel="popup">PubMed</a>
+				<li data-role="list-divider">Barcode Applications</li>
+				<li><a href="#unimpl" data-rel="popup">Google</a>
 			</ul>
 		</div>
 		
 		<div data-role="popup" id="unimpl">Feature coming soon</div>
 	</div>
-	
-	
-	<!-- Applications Edit page -->
-	<div data-role="page" id="app-edit">
-	
-		<!-- Applications Edit header -->
-		<div data-role="header">
-			<h1>App Editor</h1>
-		</div>
-		
-		<!-- Applications Edit content -->
-		<div data-role="content">
-			<div data-role="fieldcontain">
-				<label for="app-name" class="ui-input-text">Name:</label>
-				<input type="text" id="app-name" name="app-name" class="ui-input-text" />
-			</div>
-			<div class="center-text">
-				<a href="#" id="app-submit" data-role="button" data-icon="check" data-rel="back"
-					data-inline="true" data-theme="b">Submit</a>
-				<a href="#" id="app-cancel" data-role="button" data-icon="delete" data-rel="back"
-					data-inline="true">Cancel</a>
-			</div>
-		</div>
-	</div>
-
 
 	<!-- Barcode scanning page -->
 	<div data-role="page" id="scan">
@@ -294,8 +259,18 @@
 					<button id="ocr-camera-btn" data-theme="e">Begin</button>
 				</div>
 				<div class="ui-block-b" id="ocropt-phone-wrap">
-					<img src="img/phone.png">
+					<img src="img/phone-small.png">
 				</div>
+				
+				<div class="ui-block-a"></div>
+			</div>
+			
+			<div data-role="fieldcontain">
+				<label for="ocr-app" class="ui-input-text">Application:</label>
+				<select id="ocr-app" name="ocr-app" class="ui-input-text">
+					<option>PubMed Article</option>
+					<option>Generic</option>
+				</select>
 			</div>
 		</div>
 		
@@ -310,10 +285,10 @@
 				<table style="width:100%">
 					<tr>
 						<td class="ocr-text-btn">
-							<button id="ocr-text-delete" data-inline="true" data-icon="delete"
-									data-iconpos="notext" data-theme="b"></button></td>
+							<a href="#" data-rel="back" data-role="button" data-icon="back"
+								data-inline="true" data-iconpos="notext" data-theme="b"></a></td>
 						<td id="ocr-text-cell">
-							<input type="text" id="ocr-text"/></td>
+							<input type="text" id="ocr-text" data-clear-btn="true"/></td>
 				   		<td class="ocr-text-btn">
 				   			<button id="ocr-text-accept" data-inline="true" data-icon="check" 
 				   					data-iconpos="notext" data-theme="b"></button></td>
