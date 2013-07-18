@@ -1,5 +1,6 @@
 
 window.OcrPageView = Backbone.View.extend({
+    el: '#ocr',
     
     events: {
         'pageshow'                    : 'render',
@@ -39,8 +40,6 @@ window.OcrPageView = Backbone.View.extend({
     firstRender: true,
     
     initialize: function(options) {
-        this.setElement($('#ocr'));
-        
         this.photoCanvas = $('#photo-canvas')[0];
         this.drawCanvas  = $('#draw-canvas')[0];
         this.photoCtx = this.photoCanvas.getContext('2d');
@@ -53,6 +52,8 @@ window.OcrPageView = Backbone.View.extend({
         
         _.bindAll(this, 'repaint', 'onOcrInit', 'onOcrSetImage', 'onOcrGetWords',
                 'onOcrGetUTF8Text', 'onOcrGetWords2', 'onOcrGetResults', 'alertError');
+        
+        this.initOcr(this.defaultLanguage, function(){});
     },
     
     render: function(e) {
@@ -67,18 +68,14 @@ window.OcrPageView = Backbone.View.extend({
         this.isService = $.data(this.el, 'service');
         this.photo.src = $.data(this.el, 'photoUri');
         
-        var lang = $.data(this.el, 'lang') || this.initLanguage || this.defaultLanguage;
-        if (lang !== this.initLanguage) {
-            this.initLanguage = lang;
-            this.ocr.init(this.onOcrInit, this.alertError, this.initLanguage);
-        } else {
-            this.onOcrInit();
-        }
-        
+        this.initOcr(this.$el.data('lang'), this.onOcrInit());
         
         // We need to wait for the photo to load before we can work with it
         var self = this;
         $(this.photo).one('load', function() {
+            // For some reason, only on the first render this bug appears:
+            // code.google.com/p/android/issues/detail?id=35474
+            // This seems to fix the problem
             if (self.firstRender) {
                 self.firstRender = false;
                 var content = $('#ocr-content').detach();
@@ -90,6 +87,16 @@ window.OcrPageView = Backbone.View.extend({
         });
         
         return this;
+    },
+    
+    initOcr: function(lang, onSuccess) {
+        lang = lang || this.initLanguage || this.defaultLanguage;
+        if (lang !== this.initLanguage) {
+            this.initLanguage = lang;
+            this.ocr.init(onSuccess, this.alertError, this.initLanguage);
+        } else {
+            _.defer(onSuccess);
+        }
     },
     
     onHide: function() {
