@@ -21,6 +21,7 @@
 	<script src="js/lib/underscore-min.js"></script>
 	<script src="js/lib/backbone-min.js"></script>
 	<script src="js/lib/backbone.localStorage-min.js"></script>
+	<script src="js/lib/iscroll-min.js"></script>
 	<!-- Backbone models -->
 	<script src="js/model/Bookmark.js"></script>
 	<script src="js/model/App.js"></script>
@@ -294,7 +295,19 @@
 				   					data-iconpos="notext" data-theme="b"></button></td>
 					</tr>
 				</table>
-				<p id="ocr-draw-directions">Drag your finger to select text.</p>
+				<table id="ocr-controls"><tr>
+					<td class="col1">Drag your finger to select text.</td>
+					<td>
+						<div id="ocr-mode-toggle-wrap" data-role="fieldcontain">
+							<label for="ocr-mode-toggle">Move mode:</label>
+							<select name="ocr-mode-toggle" id="ocr-mode-toggle" data-role="slider"
+								data-mini="true">
+								<option value="off">Off</option>
+								<option value="on">On</option>
+							</select>
+						</div>
+					</td>
+				</tr></table>
 			</div></div>
 			
 			<!-- Canvas -->
