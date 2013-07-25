@@ -128,11 +128,6 @@ body {
     width: 100%;
 }
 
-#ocr-draw-wrap {
-	/* Improves performance of iScroll */
-	-webkit-transform: translate3d(0,0,0);
-}
-
 #ocr-draw-wrap > div {
     height: 100%;
 }
@@ -145,37 +140,16 @@ body {
 	width: 2em;
 }
 
-#ocr-controls {
+#ocr-draw-directions {
 	background-color: #5A5A5A;
 	color: white;
-	font-size: 14px;
-	font-weight: 400;
+	font-weight: bold;
+	font-size: 110%;
 	text-shadow: black 0px 1px 1px;
-	/*
 	text-align: center;
 	margin: 0;
 	padding-top: 1px;
 	padding-bottom: 2px;
-	*/
-	width: 100%;
-}
-
-#ocr-controls .col1 {
-	width: 1%;
-	white-space: nowrap;
-}
-
-#ocr-mode-toggle-wrap {
-	text-align: right;
-	margin-top: 2px;
-	margin-bottom: 0;
-}
-
-#ocr-mode-toggle-label {
-	line-height: 2;
-	font-size: 14px;
-	width: auto;
-	display: inline;
 }
 
 #ocr-draw-wrap {
