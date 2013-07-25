@@ -5,11 +5,9 @@ window.OcrPageView = Backbone.View.extend({
     events: {
         'pageshow'                    : 'render',
         'pagehide'                    : 'onHide',
-        'touchstart  #draw-canvas'    : 'startDraw',
-        'touchmove   #draw-canvas'    : 'moveDraw',
-        'touchend    #draw-canvas'    : 'endDraw',
         'vclick      .ui-input-clear' : 'clearText',
-        'vclick      #ocr-text-accept': 'submit'
+        'vclick      #ocr-text-accept': 'submit',
+        'slidestop   #ocr-mode-toggle': 'toggleMode'
     },
     
     ocr: cordova.require('cordova/plugin/ocr'),
@@ -52,7 +50,7 @@ window.OcrPageView = Backbone.View.extend({
         
         _.bindAll(this, 'repaint', 'ocrSetWhiteList', 'ocrInit', 'ocrSetImage',
                 'ocrGetWords', 'ocrGetText', 'ocrGetWords2', 'ocrGetResults',
-                'ocrSetResults', 'alertError');
+                'ocrSetResults', 'alertError', 'startDraw', 'moveDraw', 'endDraw');
         
         this.ocrInit(this.defaultLanguage, function(){});
     },
@@ -64,6 +62,15 @@ window.OcrPageView = Backbone.View.extend({
         this.currentTouchPaths = {};
         this.finishedTouchPaths = [];
         this.ocrTextbox.val('');
+        
+        this.iScroll = new iScroll('ocr-draw-wrap', {
+            zoom: true,
+            zoomMax: 8,
+            hScrollbar: false,
+            vScrollbar: false
+        });
+        
+        this.setMode('Select');
         
         // Get page data
         this.isService = this.$el.data('service');
@@ -98,10 +105,13 @@ window.OcrPageView = Backbone.View.extend({
         return this;
     },
     
+    // Free up resources
     onHide: function() {
         $(window).off('resize', this.repaint);
         this.photoCtx.clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
         this.drawCtx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+        this.iScroll.destroy();
+        this.iScroll = null;
     },
     
     repaint: function() {
@@ -141,6 +151,8 @@ window.OcrPageView = Backbone.View.extend({
         
         _.each(this.finishedTouchPaths, this.clearPath, this);
         _.each(this.currentTouchPaths, this.clearPath, this);
+        
+        this.refreshIScroll();
     },
     
     ocrInit: function(lang, onSuccess, force) {
@@ -282,9 +294,28 @@ window.OcrPageView = Backbone.View.extend({
         } else {
             if (this.app === 'PubMed Article') {
                 var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + text.trim();
-                window.open(url, '_blank');
+                window.open(url, '_system');
             }
         }
+    },
+    
+    toggleMode: function(e) {
+        this.setMode($(e.target).val());
+    },
+    
+    setMode: function(mode) {
+        var canv = $(this.drawCanvas);
+        if (mode === 'Select' && this.mode !== 'Select') {
+            this.iScroll.disable();
+            canv.on({ touchstart : this.startDraw
+                    , touchmove  : this.moveDraw
+                    , touchend   : this.endDraw});
+        } else if (mode === 'Move' && this.mode !== 'Move') {
+            canv.off();
+            this.iScroll.enable();
+        }
+        
+        this.mode = mode;
     },
     
     selectWordsAt: function(point) {
@@ -394,6 +425,12 @@ window.OcrPageView = Backbone.View.extend({
         var x = (touch.pageX - rect.left) / this.scale;
         var y = (touch.pageY - rect.top)  / this.scale;
         return {x: x, y: y};
+    },
+    
+    refreshIScroll: function() {
+        _.defer(function(self) {
+            if (self.iScroll) { self.iScroll.refresh(); }
+        }, this);
     },
     
     alertError: function(message) {

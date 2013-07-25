@@ -296,16 +296,15 @@
 					</tr>
 				</table>
 				<table id="ocr-controls"><tr>
-					<td class="col1">Drag your finger to select text.</td>
-					<td>
-						<div id="ocr-mode-toggle-wrap" data-role="fieldcontain">
-							<label for="ocr-mode-toggle">Move mode:</label>
-							<select name="ocr-mode-toggle" id="ocr-mode-toggle" data-role="slider"
-								data-mini="true">
-								<option value="off">Off</option>
-								<option value="on">On</option>
-							</select>
-						</div>
+					<td class="col1 select-text">Drag your finger to select text.</td>
+					<td class="col1 move-text">Drag to move and pinch to zoom.</td>
+					<td class="col2">
+						<label>Mode:</label>
+						<select name="ocr-mode-toggle" id="ocr-mode-toggle" data-role="slider"
+							data-mini="true" data-track-theme="b">
+							<option value="Select">Select</option>
+							<option value="Move">Move</option>
+						</select>
 					</td>
 				</tr></table>
 			</div></div>
