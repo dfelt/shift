@@ -19,17 +19,20 @@ window.OcrPageView = Backbone.View.extend({
     selectedWordColor:   'rgba(255, 255, 0, 0.4)',
     clearDuration: 1000,
     confidenceThreshold: 50,
+    lineWidth: 36,
     defaultLanguage: 'eng',
     
     photo: new Image(),
     scale: 1.0,
     
-    words: {},
+    words: [],
     selectedWords: [],
     haveWordText: false,
     
     currentTouchPaths: {},
     finishedTouchPaths: [],
+    
+    initialBounds: { minX: Number.MAX_VALUE, minY: Number.MAX_VALUE, maxX: 0, maxY: 0 },
     
     lastDrawTime: 0,
     
@@ -58,12 +61,7 @@ window.OcrPageView = Backbone.View.extend({
     },
     
     render: function(e) {
-        this.words = [];
-        this.selectedWords = [];
-        this.haveWordText = false;
-        this.currentTouchPaths = {};
-        this.finishedTouchPaths = [];
-        this.ocrTextbox.val('');
+        this.clearData();
         
         // Get page data
         this.isService = this.$el.data('service');
@@ -81,7 +79,8 @@ window.OcrPageView = Backbone.View.extend({
         // We need to wait for the photo to load before we can work with it
         var self = this;
         $(this.photo).one('load', function() {
-            console.log('onload: ' + self.photo.naturalWidth + ' ' + self.photo.naturalHeight);
+            self.rectangle = {x: 0, y: 0,
+                    width: this.naturalWidth, height: this.naturalHeight };
             // For some reason, only on the first render this bug appears:
             // code.google.com/p/android/issues/detail?id=35474
             // This seems to fix the problem
@@ -99,9 +98,11 @@ window.OcrPageView = Backbone.View.extend({
     },
     
     onHide: function() {
+        this.clearData();
         $(window).off('resize', this.repaint);
         this.photoCtx.clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
         this.drawCtx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+        this.photo.src = '';
     },
     
     repaint: function() {
@@ -197,6 +198,9 @@ window.OcrPageView = Backbone.View.extend({
     
     // After getting the updated word boxes, we get the actual word text
     ocrGetResults: function(words) {
+        _.each(words, function(w) {
+            w.x += this.x; w.y += this.y;
+        }, this.rectangle);
         this.tempWordBoxes = words;
         this.ocr.getResults(this.ocrSetResults, this.alertError,
                 this.ocr.PageIteratorLevel.RIL_WORD);
@@ -204,6 +208,8 @@ window.OcrPageView = Backbone.View.extend({
     
     // After we get the word texts, highlight them in the picture
     ocrSetResults: function(words) {
+        var self = this;
+        
         // Join together word texts and word boxes
         for (var i = 0; i < words.length; i++) {
             _.extend(words[i], this.tempWordBoxes[i]);
@@ -213,21 +219,23 @@ window.OcrPageView = Backbone.View.extend({
         // Remove whitespace and low-confidence words
         words = _.reject(words, function(w) {
             return (/^\s*$/).test(w.text) || w.confidence < this.confidenceThreshold;
-        });
-        
-        // Show notification if no words found
-        if (words.length === 0) {
+        }, this);
+
+        // Show notification if no words found in the entire image
+        var wholePhoto = _.isEqual(this.rectangle,
+                {x: 0, y: 0, width: this.photo.naturalWidth, height: this.photo.naturalHeight});
+        if (words.length === 0 && wholePhoto) {
             var isService = this.isService;
             
             navigator.notification.confirm(
                 'No text found. Retake photo?',
                 function(btn) {
-                    if (btn === 1) {
+                    if (btn === 1 && !isService) {
                         window.history.back();
-                    } else if (isService) {
+                    } else if (btn === 1 && isService) {
                         window.location.href = 'app://ocr?' + $.params({
                             success: false,
-                            message: 'Camera cancelled'
+                            message: 'Cancelled'
                         });
                     }
                 },
@@ -235,19 +243,46 @@ window.OcrPageView = Backbone.View.extend({
             return;
         }
         
-        _.each(words, function(w, i) { w.index = i; });
+        var offset = this.words.length;
+        _.each(words, function(w, i) { w.index = i + offset; });
+
+        // Remove words in the chosen rectangle so we can replace them
+        this.words = _.reject(this.words, function(w) {
+            return (w.x < this.x + this.width)  && (w.x + w.w > this.x)
+                && (w.y < this.y + this.height) && (w.y + w.h > this.y);
+        }, this.rectangle);
         
-        // Get new words that overlap old selected words
-        var newSelectedWords = _.map(this.selectedWords, function(w) {
-            return _.findWhere(words, { x: w.x, y: w.y });
+        //this.words.push.apply(words);
+        this.words = this.words.concat(words);
+        this.selectedWords = [];
+        
+        _.each(this.finishedTouchPaths, function(path) {
+            _.each(path, function(point) {
+                self.selectWordsAt(point);
+            });
         });
-        this.selectedWords = _.compact(newSelectedWords);
+        
+        /*
+        // Recalculate selected words
+        this.selectedWords = _.filter(words, function(w) {
+            for (var i = 0; i < this.finishedTouchPaths.length; i++) {
+                var path = this.finishedTouchPaths[i];
+                for (var j = 0; j < path.length; j++) {
+                    var p = path[j];
+                    if (w.x <= p.x && p.x <= w.x + w.w && w.y <= p.y && p.y <= w.y + w.h) {
+                        return true;
+                    }
+                }
+            }
+        }, this);
+        
         _.each(this.selectedWords, function(w) {
             w.selected = true;
         });
+        */
+        
         this.updateTextbox();
         
-        this.words = words;
         this.haveWordText = true;
         
         $.mobile.loading('hide');
@@ -258,12 +293,19 @@ window.OcrPageView = Backbone.View.extend({
         console.log('OCR: ' + JSON.stringify(words));
     },
     
+    ocrSetRectangle: function(rect) {
+        this.rectangle = rect;
+        this.ocr.setRectangle(_.identity, this.alertError, rect);
+        this.ocr.getUTF8Text(this.ocrGetWords2, this.alertError);
+    },
+    
     clearText: function() {
         this.ocrTextbox.val('');
         _.each(this.words, function(w) { w.selected = false; });
         this.selectedWords = [];
         this.currentTouchPaths = {};
         this.finishedTouchPaths = [];
+        this.bounds = _.clone(this.initialBounds);
         this.repaint();
     },
     
@@ -288,6 +330,12 @@ window.OcrPageView = Backbone.View.extend({
     },
     
     selectWordsAt: function(point) {
+        // Resize bounds
+        this.bounds.minX = Math.min(this.bounds.minX, point.x);
+        this.bounds.minY = Math.min(this.bounds.minY, point.y);
+        this.bounds.maxX = Math.max(this.bounds.maxX, point.x);
+        this.bounds.maxY = Math.max(this.bounds.maxY, point.y);
+
         // Find word whose box contains point
         var word = _.find(this.words, function(w) {
             return w.x <= point.x && point.x <= w.x + w.w
@@ -370,10 +418,31 @@ window.OcrPageView = Backbone.View.extend({
             this.finishedTouchPaths.push(this.currentTouchPaths[t.identifier]);
             delete this.currentTouchPaths[t.identifier];
         }, this);
+        
+        console.log('endDraw ' + JSON.stringify(this.bounds));
+        var b = this.bounds,
+            r = this.lineWidth / 2,
+            s = this.scale;
+        this.photoCtx.save();
+        this.photoCtx.strokeStyle = 'red';
+        this.photoCtx.globalAlpha = 1;
+        this.photoCtx.strokeRect(
+                s * b.minX - r,
+                s * b.minY - r,
+                s * (b.maxX - b.minX) + 2*r,
+                s * (b.maxY - b.minY) + 2*r);
+        this.photoCtx.restore();
+        
+        this.ocrSetRectangle({
+            x: b.minX-r,
+            y: b.minY-r,
+            width:  b.maxX-b.minX + 2*r,
+            height: b.maxY-b.minY + 2*r
+        });
     },
     
     clearPath: function(path) {
-        this.drawCtx.lineWidth = 36;
+        this.drawCtx.lineWidth = this.lineWidth;
         this.drawCtx.lineCap = 'round';
         this.drawCtx.lineJoin = 'round';
         this.drawCtx.strokeStyle = 'rgba(0,0,0,1)';
@@ -394,6 +463,16 @@ window.OcrPageView = Backbone.View.extend({
         var x = (touch.pageX - rect.left) / this.scale;
         var y = (touch.pageY - rect.top)  / this.scale;
         return {x: x, y: y};
+    },
+    
+    clearData: function() {
+        this.words = [];
+        this.selectedWords = [];
+        this.haveWordText = false;
+        this.currentTouchPaths = {};
+        this.finishedTouchPaths = [];
+        this.ocrTextbox.val('');
+        this.bounds = _.clone(this.initialBounds);
     },
     
     alertError: function(message) {
