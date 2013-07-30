@@ -167,8 +167,14 @@ public class Ocr extends CordovaPlugin {
 			callbackContext.success(getBoxes(tess.getWords()));
 		}
 		else if (GET_RESULTS.equals(action)) {
-			// We need to force recognition before we can use the ResultIterator
-			tess.getUTF8Text();
+			// We need to force recognition before we can use the ResultIterator.
+			String text = tess.getUTF8Text();
+			// Additionally, the program will crash if we try to use the iterator
+			// when there are no results in it.
+			if (text.length() == 0) {
+				callbackContext.success(new JSONArray());
+				return;
+			}
 			
 			int level = args.getInt(0);
 			JSONArray results = new JSONArray();
