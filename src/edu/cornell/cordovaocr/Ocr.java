@@ -7,7 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
@@ -53,23 +57,25 @@ public class Ocr extends CordovaPlugin {
     private static final String GET_CHARACTERS               = "getCharacters";
     private static final String GET_RESULTS                  = "getResults";
     
-    private static final List<String> ACTIONS = Arrays.asList(
+    private static final Set<String> ACTIONS = new HashSet<String>(Arrays.asList(
     	INIT, GET_INIT_LANGUAGES_AS_STRING, CLEAR, END, SET_VARIABLE, SET_PAGE_SEG_MODE,
     	SET_RECTANGLE, SET_IMAGE, GET_UTF8_TEXT, MEAN_CONFIDENCE, WORD_CONFIDENCES, GET_REGIONS,
     	GET_TEXTLINES, GET_STRIPS, GET_WORDS, GET_CHARACTERS, GET_RESULTS
-    );
+    ));
     
     private static final int BYTES_PER_PIXEL = 4;
     private static final int BITMAP_MEM_LIMIT = 5000000;
     
 	TessBaseAPI tess;
-	ResultIterator resultIterator;
 	Bitmap image;
 	Uri imageUri;
 	int imageScale;
 	
+	ScheduledExecutorService runQueue;
+	
 	public Ocr() {
 		tess = new TessBaseAPI();
+		runQueue = Executors.newSingleThreadScheduledExecutor();
 	}
 	
 	@Override
@@ -79,7 +85,7 @@ public class Ocr extends CordovaPlugin {
 			return false;
 		}
 		
-		cordova.getThreadPool().execute(new Runnable() {
+		runQueue.execute(new Runnable() {
 			public void run() {
 				try {
 					executeAsync(action, args, callbackContext);
@@ -93,7 +99,7 @@ public class Ocr extends CordovaPlugin {
 		return true;
 	}
 	
-	public synchronized void executeAsync(String action, JSONArray args,
+	public void executeAsync(String action, JSONArray args,
 			CallbackContext callbackContext)
 			throws JSONException, FileNotFoundException, IOException {
 		Log.d(TAG, "Executing action: " + action);
