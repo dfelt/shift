@@ -18,7 +18,7 @@ window.OcrPageView = Backbone.View.extend({
     unselectedWordColor: 'rgba(255, 255, 0, 0.15)',
     selectedWordColor:   'rgba(255, 255, 0, 0.4)',
     clearDuration: 1000,
-    confidenceThreshold: 50,
+    confidenceThreshold: 25,
     lineWidth: 36,
     defaultLanguage: 'eng',
     
@@ -33,6 +33,7 @@ window.OcrPageView = Backbone.View.extend({
     finishedTouchPaths: [],
     
     initialBounds: { minX: Number.MAX_VALUE, minY: Number.MAX_VALUE, maxX: 0, maxY: 0 },
+    boundsExpanded: false,
     
     lastDrawTime: 0,
     
@@ -55,12 +56,13 @@ window.OcrPageView = Backbone.View.extend({
         
         _.bindAll(this, 'repaint', 'ocrSetWhiteList', 'ocrInit', 'ocrSetImage',
                 'ocrGetWords', 'ocrGetText', 'ocrGetWords2', 'ocrGetResults',
-                'ocrSetResults', 'alertError');
+                'ocrSetResults', 'scheduleOcrAction', 'alertError');
         
         this.ocrInit(this.defaultLanguage, function(){});
     },
     
     render: function(e) {
+        var self = this;
         this.clearData();
         
         // Get page data
@@ -70,14 +72,13 @@ window.OcrPageView = Backbone.View.extend({
         
         if (this.app === 'PubMed Article') {
             this.whiteList = '0123456789';
-            this.ocrInit('eng', this.ocrSetWhiteList);
+            this.scheduleOcrAction(function() { self.ocrInit('eng', self.ocrSetWhiteList); });
         } else {
-            var init = _.partial(this.ocrInit, this.$el.data('lang'), this.ocrSetImage, true);
-            this.ocr.end(init, this.alertError);
+            var init = _.partial(self.ocrInit, self.$el.data('lang'), self.ocrSetImage, self);
+            this.scheduleOcrAction(function() { self.ocr.end(init, self.alertError); });
         }
         
         // We need to wait for the photo to load before we can work with it
-        var self = this;
         $(this.photo).one('load', function() {
             self.rectangle = {x: 0, y: 0,
                     width: this.naturalWidth, height: this.naturalHeight };
@@ -221,39 +222,36 @@ window.OcrPageView = Backbone.View.extend({
             return (/^\s*$/).test(w.text) || w.confidence < this.confidenceThreshold;
         }, this);
 
-        // Show notification if no words found in the entire image
-        var wholePhoto = _.isEqual(this.rectangle,
-                {x: 0, y: 0, width: this.photo.naturalWidth, height: this.photo.naturalHeight});
-        if (words.length === 0 && wholePhoto) {
-            var isService = this.isService;
-            
-            navigator.notification.confirm(
-                'No text found. Retake photo?',
-                function(btn) {
-                    if (btn === 1 && !isService) {
-                        window.history.back();
-                    } else if (btn === 1 && isService) {
-                        window.location.href = 'app://ocr?' + $.params({
-                            success: false,
-                            message: 'Cancelled'
-                        });
-                    }
-                },
-                'Retry?');
-            return;
+        // Remove words that overlap new words so we can replace them
+        this.words = _.reject(this.words, function(a) {
+            return _.some(words, function(b) {
+                return (a.x < b.x + b.w) && (a.x + a.w > b.x)
+                    && (a.y < b.y + b.h) && (a.y + a.h > b.y);
+            });
+        });
+        
+        // Orders words by their position on the page
+        function wordOrder(a, b) {
+            var tol = (a.h + b.h) / 4;
+            return Math.abs(a.y - b.y) > tol ? a.y - b.y : a.x - b.x;
         }
         
-        var offset = this.words.length;
-        _.each(words, function(w, i) { w.index = i + offset; });
-
-        // Remove words in the chosen rectangle so we can replace them
-        this.words = _.reject(this.words, function(w) {
-            return (w.x < this.x + this.width)  && (w.x + w.w > this.x)
-                && (w.y < this.y + this.height) && (w.y + w.h > this.y);
-        }, this.rectangle);
+        // Merges two arrays, using compare to order elements
+        function merge(left, right, compare) {
+            var result = [],
+                i = 0,
+                j = 0;
+            while(i < left.length && j < right.length) {
+                if (compare(left[i], right[j]) <= 0) { result.push(left[i++]);  }
+                else                                 { result.push(right[j++]); }
+            }
+            while (i < left.length)  { result.push(left[i++]);  }
+            while (j < right.length) { result.push(right[j++]); }
+            return result;
+        }
         
-        //this.words.push.apply(words);
-        this.words = this.words.concat(words);
+        this.words = merge(this.words, words, wordOrder);
+        _.each(this.words, function(w) { w.index = i; w.selected = false; });
         this.selectedWords = [];
         
         _.each(this.finishedTouchPaths, function(path) {
@@ -261,25 +259,6 @@ window.OcrPageView = Backbone.View.extend({
                 self.selectWordsAt(point);
             });
         });
-        
-        /*
-        // Recalculate selected words
-        this.selectedWords = _.filter(words, function(w) {
-            for (var i = 0; i < this.finishedTouchPaths.length; i++) {
-                var path = this.finishedTouchPaths[i];
-                for (var j = 0; j < path.length; j++) {
-                    var p = path[j];
-                    if (w.x <= p.x && p.x <= w.x + w.w && w.y <= p.y && p.y <= w.y + w.h) {
-                        return true;
-                    }
-                }
-            }
-        }, this);
-        
-        _.each(this.selectedWords, function(w) {
-            w.selected = true;
-        });
-        */
         
         this.updateTextbox();
         
@@ -290,13 +269,36 @@ window.OcrPageView = Backbone.View.extend({
         
         this.repaint();
         
-        console.log('OCR: ' + JSON.stringify(words));
+        console.log('OCR: ' + JSON.stringify(_.pluck(words, 'text')));
+        console.log('all: ' + JSON.stringify(_.pluck(this.words, 'text')));
+        
+        // If another function is scheduled to run, run it now
+        if (this.nextOcrAction) {
+            var act = this.nextOcrAction;
+            this.nextOcrAction = null;
+            act();
+        } else {
+            this.isRunningOcr = false;
+        }
     },
     
     ocrSetRectangle: function(rect) {
+        var self = this;
         this.rectangle = rect;
-        this.ocr.setRectangle(_.identity, this.alertError, rect);
-        this.ocr.getUTF8Text(this.ocrGetWords2, this.alertError);
+        this.scheduleOcrAction(function() {
+            $.mobile.loading('show');
+            self.ocr.setRectangle(_.identity, self.alertError, rect);
+            self.ocr.getUTF8Text(self.ocrGetWords2, self.alertError);
+        });
+    },
+    
+    scheduleOcrAction: function(f) {
+        if (this.isRunningOcr) {
+            this.nextOcrAction = f;
+        } else {
+            this.isRunningOcr = true;
+            f();
+        }
     },
     
     clearText: function() {
@@ -330,11 +332,8 @@ window.OcrPageView = Backbone.View.extend({
     },
     
     selectWordsAt: function(point) {
-        // Resize bounds
-        this.bounds.minX = Math.min(this.bounds.minX, point.x);
-        this.bounds.minY = Math.min(this.bounds.minY, point.y);
-        this.bounds.maxX = Math.max(this.bounds.maxX, point.x);
-        this.bounds.maxY = Math.max(this.bounds.maxY, point.y);
+        // Expand bounds to include point
+        this.expandBounds(point);
 
         // Find word whose box contains point
         var word = _.find(this.words, function(w) {
@@ -344,12 +343,16 @@ window.OcrPageView = Backbone.View.extend({
         if (word && !word.selected) {
             word.selected = true;
             
+            // Expand bounds to fit box
+            this.expandBounds(word);
+            this.expandBounds({x: word.x + word.w, y: word.y + word.h});
+            
             // Highlight word
             this.photoCtx.fillStyle = 'rgba(255, 255, 0, 0.4)';
             this.drawWordBox(word);
             
             if (this.haveWordText) {
-                // Insert word into selectedWords, keeping array in sorted
+                // Insert word into selectedWords while keeping array sorted
                 var idx = _.sortedIndex(this.selectedWords, word, 'index');
                 this.selectedWords.splice(idx, 0, word);
                 
@@ -358,6 +361,27 @@ window.OcrPageView = Backbone.View.extend({
             } else {
                 this.selectedWords.push(word);
             }
+        }
+    },
+    
+    expandBounds: function(point) {
+        var b = this.bounds;
+
+        if (point.x < b.minX) {
+            b.minX = point.x;
+            this.boundsExpanded = true;
+        }
+        if (point.x > b.maxX) {
+            b.maxX = point.x;
+            this.boundsExpanded = true;
+        }
+        if (point.y < b.minY) {
+            b.minY = point.y;
+            this.boundsExpanded = true;
+        }
+        if (point.y > b.maxY) {
+            b.maxY = point.y;
+            this.boundsExpanded = true;
         }
     },
     
@@ -419,26 +443,19 @@ window.OcrPageView = Backbone.View.extend({
             delete this.currentTouchPaths[t.identifier];
         }, this);
         
-        console.log('endDraw ' + JSON.stringify(this.bounds));
-        var b = this.bounds,
-            r = this.lineWidth / 2,
-            s = this.scale;
-        this.photoCtx.save();
-        this.photoCtx.strokeStyle = 'red';
-        this.photoCtx.globalAlpha = 1;
-        this.photoCtx.strokeRect(
-                s * b.minX - r,
-                s * b.minY - r,
-                s * (b.maxX - b.minX) + 2*r,
-                s * (b.maxY - b.minY) + 2*r);
-        this.photoCtx.restore();
-        
-        this.ocrSetRectangle({
-            x: b.minX-r,
-            y: b.minY-r,
-            width:  b.maxX-b.minX + 2*r,
-            height: b.maxY-b.minY + 2*r
-        });
+        // Redo OCR, but only within this.bounds
+        if (this.boundsExpanded) {
+            this.boundsExpanded = false;
+            var b = this.bounds,
+                r = this.lineWidth / 2,
+                s = this.scale;
+            this.ocrSetRectangle({
+                x: b.minX-r,
+                y: b.minY-r,
+                width:  b.maxX-b.minX + 2*r,
+                height: b.maxY-b.minY + 2*r
+            });
+        }
     },
     
     clearPath: function(path) {
