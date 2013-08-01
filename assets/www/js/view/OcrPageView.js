@@ -222,9 +222,9 @@ window.OcrPageView = Backbone.View.extend({
             return (/^\s*$/).test(w.text) || w.confidence < this.confidenceThreshold;
         }, this);
 
-        // Remove words that overlap new words so we can replace them
+        // Remove words that overlap new words so we can replace them, and words without text
         this.words = _.reject(this.words, function(a) {
-            return _.some(words, function(b) {
+            return !a.text || _.some(words, function(b) {
                 return (a.x < b.x + b.w) && (a.x + a.w > b.x)
                     && (a.y < b.y + b.h) && (a.y + a.h > b.y);
             });
@@ -232,8 +232,9 @@ window.OcrPageView = Backbone.View.extend({
         
         // Orders words by their position on the page
         function wordOrder(a, b) {
+            // If the words are on (roughly) the same line, order by x, else by y
             var tol = (a.h + b.h) / 4;
-            return Math.abs(a.y - b.y) > tol ? a.y - b.y : a.x - b.x;
+            return Math.abs(a.y - b.y) < tol ? a.x - b.x : a.y - b.y;
         }
         
         // Merges two arrays, using compare to order elements
@@ -251,9 +252,10 @@ window.OcrPageView = Backbone.View.extend({
         }
         
         this.words = merge(this.words, words, wordOrder);
-        _.each(this.words, function(w) { w.index = i; w.selected = false; });
+        _.each(this.words, function(w, i) { w.index = i; w.selected = false; });
         this.selectedWords = [];
         
+        // Reselect words
         _.each(this.finishedTouchPaths, function(path) {
             _.each(path, function(point) {
                 self.selectWordsAt(point);
@@ -270,7 +272,6 @@ window.OcrPageView = Backbone.View.extend({
         this.repaint();
         
         console.log('OCR: ' + JSON.stringify(_.pluck(words, 'text')));
-        console.log('all: ' + JSON.stringify(_.pluck(this.words, 'text')));
         
         // If another function is scheduled to run, run it now
         if (this.nextOcrAction) {
@@ -284,9 +285,9 @@ window.OcrPageView = Backbone.View.extend({
     
     ocrSetRectangle: function(rect) {
         var self = this;
-        this.rectangle = rect;
         this.scheduleOcrAction(function() {
             $.mobile.loading('show');
+            self.rectangle = rect;
             self.ocr.setRectangle(_.identity, self.alertError, rect);
             self.ocr.getUTF8Text(self.ocrGetWords2, self.alertError);
         });
@@ -326,7 +327,7 @@ window.OcrPageView = Backbone.View.extend({
         } else {
             if (this.app === 'PubMed Article') {
                 var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + text.trim();
-                window.open(url, '_blank');
+                window.open(url, '_system');
             }
         }
     },
@@ -449,12 +450,18 @@ window.OcrPageView = Backbone.View.extend({
             var b = this.bounds,
                 r = this.lineWidth / 2,
                 s = this.scale;
-            this.ocrSetRectangle({
-                x: b.minX-r,
-                y: b.minY-r,
-                width:  b.maxX-b.minX + 2*r,
-                height: b.maxY-b.minY + 2*r
-            });
+                rect = {
+                    x: b.minX-r,
+                    y: b.minY-r,
+                    width:  b.maxX-b.minX + 2*r,
+                    height: b.maxY-b.minY + 2*r
+                };
+            // Make sure rectangle fits within the image
+            rect.x = Math.max(rect.x, 0);
+            rect.y = Math.max(rect.y, 0);
+            rect.width  = Math.min(rect.width,  this.photo.naturalWidth  - rect.x);
+            rect.height = Math.min(rect.height, this.photo.naturalHeight - rect.y);
+            this.ocrSetRectangle(rect);
         }
     },
     

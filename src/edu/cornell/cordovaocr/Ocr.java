@@ -135,6 +135,7 @@ public class Ocr extends CordovaPlugin {
 		}
 		else if (SET_RECTANGLE.equals(action)) {
 			JSONObject r = args.getJSONObject(0);
+			Log.d(TAG, r.toString());
 			tess.setRectangle(r.getInt("x"), r.getInt("y"), r.getInt("width"), r.getInt("height"));
 			callbackContext.success();
 		}
