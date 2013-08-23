@@ -35,6 +35,8 @@
 	<script src="js/view/ScanResultsView.js"></script>
 	<script src="js/view/OcrOptionsView.js"></script>
 	<script src="js/view/OcrPageView.js"></script>
+	<script src="js/view/SettingsPageView.js"></script>
+	<script src="js/view/SettingsDialogView.js"></script>
 	<!-- Main script -->
 	<script src="js/index.js"></script>
 </head>
@@ -74,6 +76,12 @@
 					<a href="#app">
 						<img src="img/briefcase.png"><br>
 						Applications
+					</a>
+				</div>
+				<div class="ui-block-a">
+					<a href="#settings">
+						<img src="img/settings.png"><br>
+						Settings
 					</a>
 				</div>
 			</div>
@@ -307,6 +315,48 @@
 		</div>
 	</div>
 	
+	
+	<!-- Settings page -->
+	<div data-role="page" id="settings">
+	
+		<!-- Settings header -->
+		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
+			<a href="#home" data-icon="home">Home</a>
+			<h1>Settings</h1>
+		</div>
+		
+		<!-- Settings content -->
+		<div data-role="content" data-theme="c">
+			<ul data-role="listview" data-theme="c" data-inset="true">
+				<li><a href="#set-dialog" id="set-email" data-rel="dialog">Email address</a></li>
+				<li><a href="#set-dialog" id="set-url" data-rel="dialog">Server URL</a></li>
+				<li><a href="" id="set-sync">Manual sync</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<!-- Settings dialog -->
+	<div data-role="page" id="set-dialog">
+	
+		<!-- Bookmarks Edit header -->
+		<div data-role="header" id="set-dialog-header">
+			<h1>Settings editor</h1>
+		</div>
+	
+		<!-- Settings dialog content -->
+		<div data-role="content">
+			<div data-role="fieldcontain">
+				<label for="set-dialog-text" class="ui-input-text"></label>
+				<input type="text" id="set-dialog-text" name="set-dialog-text" class="ui-input-text" />
+			</div>
+			<div class="center-text">
+				<a href="#" id="set-submit" data-role="button" data-icon="check" data-rel="back"
+					data-inline="true" data-theme="b">Submit</a>
+				<a href="#" id="set-cancel" data-role="button" data-icon="delete" data-rel="back"
+					data-inline="true">Cancel</a>
+			</div>
+		</div>
+	</div>
 	
 	<!-- Templates -->
 	<script id="bm-tpl" type="x-underscore-template">

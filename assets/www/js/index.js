@@ -17,4 +17,6 @@ $(document).on('deviceready', function() {
     new BookmarkEditView();
     new AppPageView({ collection: apps });
     new AppEditView();
+    new SettingsPageView();
+    new SettingsDialogView();
 });
