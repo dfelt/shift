@@ -70,12 +70,18 @@ window.OcrPageView = Backbone.View.extend({
         this.photo.src = this.$el.data('photoUri');
         this.app = this.$el.data('app');
         
-        if (this.app === 'PubMed Article') {
+        switch (this.app) {
+        case 'Accession Number':
+        case 'PubMed Article' : 
             this.whiteList = '0123456789';
             this.scheduleOcrAction(function() { self.ocrInit('eng', self.ocrSetWhiteList); });
-        } else {
+            break;
+        case 'None' :
             var init = _.partial(self.ocrInit, self.$el.data('lang'), self.ocrSetImage, self);
             this.scheduleOcrAction(function() { self.ocr.end(init, self.alertError); });
+            break;
+        default :
+            alert('Error: unrecognized app: ' + this.app);
         }
         
         // We need to wait for the photo to load before we can work with it
@@ -313,7 +319,7 @@ window.OcrPageView = Backbone.View.extend({
     },
     
     updateTextbox: _.debounce(function() {
-        var text = _.pluck(this.selectedWords, 'text').join(' ');
+        var text = _.pluck(this.selectedWords, 'text').join(' ').trim();
         this.ocrTextbox.val(text);
     }, 250),
     
@@ -325,9 +331,21 @@ window.OcrPageView = Backbone.View.extend({
                 message: text
             });
         } else {
-            if (this.app === 'PubMed Article') {
-                var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + text.trim();
+            switch (this.app) {
+            case 'PubMed Article' :
+                var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + text;
                 window.open(url, '_system');
+                break;
+            case 'Accession Number' :
+                this.options.bookmarks.add(new Bookmark({
+                    // Patient name unknown, so we use accession for now
+                    patient: text,
+                    acc: text
+                }));
+                alert('Successfully added accession number');
+                break;
+            default :
+                // Do nothing
             }
         }
     },

@@ -1,6 +1,5 @@
 window.Bookmark = Backbone.Model.extend({
     defaults: {
-        app: '',
         patient: '',
         mrn: '',
         acc: ''
@@ -9,5 +8,5 @@ window.Bookmark = Backbone.Model.extend({
 
 window.BookmarkCollection = Backbone.Collection.extend({
     model: Bookmark,
-    localStorage: new Backbone.LocalStorage('Bookmark')
+    localStorage: new Backbone.LocalStorage('Bookmark2')
 });

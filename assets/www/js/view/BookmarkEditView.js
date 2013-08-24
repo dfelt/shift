@@ -8,7 +8,6 @@ window.BookmarkEditView = Backbone.View.extend({
     
     initialize: function() {
         this.fields = {
-            app     : $('#bm-app'),
             patient : $('#bm-patient'),
             mrn     : $('#bm-mrn'),
             acc     : $('#bm-acc')

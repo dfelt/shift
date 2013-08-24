@@ -12,19 +12,17 @@ window.SettingsPageView = Backbone.View.extend({
     },
     
     setEmail: function() {
-        var key = 'settings-email-address';
-        var currEmail = localStorage.getItem(key);
+        var currEmail = localStorage.getItem(SettingsPageView.EMAIL);
         this.showSettingsDialog('Email', currEmail, function(success, email) {
             console.log('setting email: ' + success + ' ' + email);
-            if (success) { localStorage.setItem(key, email); }
+            if (success) { localStorage.setItem(SettingsPageView.EMAIL, email); }
         });
     },
     
     setUrl: function() {
-        var key = 'settings-server-url';
-        var currUrl = localStorage.getItem(key);
+        var currUrl = localStorage.getItem(SettingsPageView.URL);
         this.showSettingsDialog('Server URL', currUrl, function(success, url) {
-            if (success) { localStorage.setItem(key, url); }
+            if (success) { localStorage.setItem(SettingsPageView.URL, url); }
         });
     },
     
@@ -34,10 +32,12 @@ window.SettingsPageView = Backbone.View.extend({
     },
     
     showSettingsDialog: function(field, initialValue, callback) {
-        console.log('initialValue: ' + initialValue);
         this.$settingsDialog.data({
             field: field,
             initialValue: initialValue,
             callback: callback });
     }
+}, /* Static members */ {
+    EMAIL: 'settings-email-address',
+    URL: 'settings-server-url'
 });

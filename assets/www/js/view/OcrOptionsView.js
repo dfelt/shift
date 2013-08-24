@@ -26,6 +26,17 @@ window.OcrOptionsView = Backbone.View.extend({
     getPhoto: function() {
         console.log('getPhoto');
         var self = this;
+        
+        var app = $('#ocr-app').val();
+        if (app === 'Accession Number'
+                && (!localStorage.getItem(SettingsPageView.EMAIL)
+                ||  !localStorage.getItem(SettingsPageView.URL))) {
+            window.alert("This app requires a server URL for tracking patient updates " +
+                    "and an email address for recieving updates.");
+            $.mobile.changePage('#settings');
+            return;
+        }
+        
         var gotoOcrPage = function(photoUri) {
             self.setCameraButtonEnabled(true);
             

@@ -12,7 +12,7 @@ $(document).on('deviceready', function() {
     new ScanPageView();
     new ScanResultsView({ apps: apps });
     new OcrOptionsView();
-    new OcrPageView();
+    new OcrPageView({ bookmarks: bookmarks });
     new BookmarksPageView({ collection: bookmarks });
     new BookmarkEditView();
     new AppPageView({ collection: apps });

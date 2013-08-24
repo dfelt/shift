@@ -69,7 +69,7 @@
 				<div class="ui-block-a">
 					<a href="#bookmarks">
 						<img src="img/bookmark.png"><br>
-						Bookmarks
+						Patients
 					</a>
 				</div>
 				<div class="ui-block-b">
@@ -95,14 +95,14 @@
 		<!-- Bookmarks header -->
 		<div data-role="header" data-id="head" data-theme="b" data-position="fixed">
 			<a href="#home" data-icon="home">Home</a>
-			<h1>Bookmarks</h1>
+			<h1>Patients</h1>
 			<a href="#bm-edit" id="bm-new-btn" data-rel="dialog" data-icon="plus">New</a>
 		</div>
 		
 		<!-- Bookmarks content -->
 		<div data-role="content" data-theme="c">
 			<ul id="bm-list" data-role="listview" data-split-icon="gear" data-split-theme="b"
-				data-theme="c" data-filter="true" data-filter-placeholder="Search Bookmarks..."
+				data-theme="c" data-filter="true" data-filter-placeholder="Search Patients..."
 				data-inset="true">
 			</ul>
 		</div>
@@ -126,15 +126,11 @@
 	
 		<!-- Bookmarks Edit header -->
 		<div data-role="header">
-			<h1>Bookmark Editor</h1>
+			<h1>Patient Editor</h1>
 		</div>
 		
 		<!-- Bookmarks Edit content -->
 		<div data-role="content">
-			<div data-role="fieldcontain">
-				<label for="bm-app" class="ui-input-text">App:</label>
-				<input type="text" id="bm-app" name="bm-app" class="ui-input-text" />
-			</div>
 			<div data-role="fieldcontain">
 				<label for="bm-patient" class="ui-input-text">Patient:</label>
 				<input type="text" id="bm-patient" name="bm-patient" class="ui-input-text" />
@@ -144,7 +140,7 @@
 				<input type="text" id="bm-mrn" name="bm-mrn" class="ui-input-text" />
 			</div>
 			<div data-role="fieldcontain">
-				<label for="bm-acc" class="ui-input-text">ACC:</label>
+				<label for="bm-acc" class="ui-input-text">Accession #:</label>
 				<input type="text" id="bm-acc" name="bm-acc" class="ui-input-text" />
 			</div>
 			<div class="center-text">
@@ -276,6 +272,7 @@
 			<div data-role="fieldcontain">
 				<label for="ocr-app" class="ui-input-text">Application:</label>
 				<select id="ocr-app" name="ocr-app" class="ui-input-text">
+					<option>Accession Number</option>
 					<option>PubMed Article</option>
 					<option>None</option>
 				</select>
@@ -360,7 +357,7 @@
 	
 	<!-- Templates -->
 	<script id="bm-tpl" type="x-underscore-template">
-		<a href="#unimpl" data-rel="popup" class="bm-list-btn"><%= app %></a>
+		<a href="#unimpl" data-rel="popup" class="bm-list-btn"><%= patient %></a>
 		<a href="#bm-options" data-rel="popup" class="bm-options-btn">
 	</script>
 	<script id="app-tpl" type="x-underscore-template">

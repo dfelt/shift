@@ -5,14 +5,21 @@ window.BookmarkView = Backbone.View.extend({
         'vclick .bm-options-btn' : 'setOptionsModel'
     },
     
+    // Lazily instantiate template
+    template: function(data) {
+        if (!this.tpl) {
+            window.BookmarkView.prototype.tpl = _.template($('#bm-tpl').html());
+        }
+        return this.tpl(data);
+    },
+    
     initialize: function() {
-        this.template = _.template($('#bm-tpl').html());
         this.listenTo(this.model, 'change', this.modify);
         this.listenTo(this.model, 'destroy', this.remove);
     },
     
     render: function() {
-        this.$el.html(this.template({ app: this.model.get('app') }));
+        this.$el.html(this.template({ patient: this.model.get('patient') }));
         return this;
     },
     
